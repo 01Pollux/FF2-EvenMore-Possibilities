@@ -33,9 +33,14 @@ public bool Necro_PrepareConfig()
 	return true;
 }
 
-public void OnMapStart()
+public void CleanUp_OnPostRoundEnd(Event event, const char[] Name, bool broadcast)
 {
 	Minions.Clear();
+}
+
+public void OnMapStart()
+{
+	delete Minions;
 }
 
 public Action OnPlayerTaunt(int client, const char[] command, int arg)
@@ -133,12 +138,7 @@ public void Post_SummonPostThink(int client)
 	NextEffectsAt[client] = GetGameTime() + NextSideEffect.FloatValue;
 }
 
-public void CleanUp_OnPostRoundEnd(Event event, const char[] Name, bool broadcast)
-{
-	Minions.Clear();
-}
-
-void ApplyBadStuff(int victim)
+static void ApplyBadStuff(int victim)
 {
 	if(TF2_IsPlayerInCondition(victim, LastCond[victim]))
 		TF2_RemoveCondition(victim, LastCond[victim]);
