@@ -10,6 +10,7 @@ Allow any ScatterGun to apply self force.
 
 -up_max_fanpush : enable unlimited FaN push
 
+
 Medic Necromancy :
 
 Summons a heavy to be on your side, Note: you shall only have one heavy at the time.
