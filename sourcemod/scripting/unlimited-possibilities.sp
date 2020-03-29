@@ -8,9 +8,12 @@
 
 #pragma newdecls required
 
+bool LateLoaded;
+
 #undef REQUIRE_PLUGIN
-#include "possibilities/infinite_fan_push.sp"
-#include "possibilities/medic_necromancy.sp"
+#tryinclude "possibilities/infinite_fan_push.sp"
+#tryinclude "possibilities/medic_necromancy.sp"
+#include "possibilities/demo_newshield.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
@@ -20,6 +23,12 @@ public Plugin myinfo =
 	version		= "1.0",
 	url 			= "go-away.net"
 };
+
+public APLRes AskPluginLoad2(Handle Plugin, bool late, char[] err, int err_max)
+{
+	LateLoaded = late;
+	return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
@@ -35,7 +44,7 @@ public void OnPluginStart()
 	if(!FaN_PrepareConfig(Config))
 	{
 		delete Config;
-		SetFailState("[GameData] Failed to Load \"infinite_fan_push.sp\","
+		SetFailState("[FF2] Failed to Load \"infinite_fan_push.sp\","
 						..."Try updating your GameData");
 		return;
 	}
@@ -45,13 +54,21 @@ public void OnPluginStart()
 	if(!Necro_PrepareConfig())
 	{
 		delete Config;
-		SetFailState("[GameData] Failed to Load \"medic_necromancy.sp\","
+		SetFailState("[FF2] Failed to Load \"medic_necromancy.sp\"");
+		return;
+	}
+#endif
+
+#if defined DEMO_NEWSHIELD
+	if(!NewShield_PrepareConfig(Config))
+	{
+		delete Config;
+		SetFailState("[FF2] Failed to Load \"demo_newshield.sp\","
 						..."Try updating your GameData");
 		return;
 	}
 #endif
 	delete Config;
-	
 }
 
 
