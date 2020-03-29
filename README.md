@@ -26,6 +26,6 @@ The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 
 ## Demo-NewShield :
 
-###### Regenerates demoshield once in a while.
+###### Regenerates demoshield over time after it breaks.
 
 -dns_duration : Shield regeneration time.
