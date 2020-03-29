@@ -8,17 +8,24 @@ The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 
 ###### Allow any ScatterGun to apply self force.
 
--up_max_fanpush : enable unlimited FaN push
+-up_max_fanpush : enable unlimited FaN push.
 
 
 ## Medic Necromancy :
 
 ###### Summons a heavy to be on your side, Note: you shall only have one heavy at the time.
 
--nm_mincharge : Minimum Uber required to summon
+-nm_mincharge : Minimum Uber required to summon.
 
--nm_wait_duration : Duration before next summon is available
+-nm_wait_duration : Duration before next summon is available.
 
--nm_sideeffects_delay : Delay between Bad/Random effects
+-nm_sideeffects_delay : Delay between Bad/Random effects.
 
--nm_randomdeath : Random death percentage for summon
+-nm_randomdeath : Random death percentage for summon.
+
+
+## Demo-NewShield :
+
+###### Regenerates demoshield once in a while.
+
+-dns_duration : Shield regeneration time.
