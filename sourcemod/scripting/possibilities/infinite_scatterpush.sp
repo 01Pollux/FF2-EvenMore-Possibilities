@@ -5,7 +5,7 @@
 
 static Address g_ScatterSelfForce = Address_Null;
 static Address g_UnlimitedSelfForce = Address_Null;
-static int OLD_Address[7];
+static int OLD_Address[6];
 
 static ConVar cv_UnlimitedPushes;
 
@@ -24,7 +24,7 @@ public bool FaN_PrepareConfig(const GameData Config)
 	if((g_UnlimitedSelfForce = Config.GetAddress("CTFScattergun::FireBullet::NoPushPenalty")) == Address_Null)
 		return false;
 	
-	for (int x; x < 7; x++)
+	for (int x; x < 6; x++)
 		OLD_Address[x] = LoadFromAddress(g_ScatterSelfForce + view_as<Address>(x), NumberType_Int8);
 	
 	cv_UnlimitedPushes = CreateConVar("up_max_fanpush", "0", "Unlimited Pushes for FaN");
@@ -34,8 +34,8 @@ public bool FaN_PrepareConfig(const GameData Config)
 
 public MRESReturn Pre_ScatterFireBullet(int weapon, Handle Params)
 {
-	ToggleFaN(false);
-	ToggleScatter(false);
+	LimitedFan();
+	DisableScatterFaN();
 	
 	int client = DHookGetParam(Params, 1);
 	int boss = FF2_GetBossIndex(client);
@@ -46,29 +46,42 @@ public MRESReturn Pre_ScatterFireBullet(int weapon, Handle Params)
 		return MRES_Ignored;
 	
 	if(cv_UnlimitedPushes.BoolValue)
-		ToggleFaN(true);
+		UnLimitedFan();
 	
 	int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
 	if(index != 1103 && index != 220)	//back scratcher && shortstop
 		return MRES_Ignored;
 		
-	ToggleScatter(true);
+	EnableScatterFaN();
 	return MRES_Ignored;
 }
 
 public MRESReturn Post_ScatterFireBullet(int weapon, Handle Player)
 {
-	ToggleFaN(false);
-	ToggleScatter(false);
+	LimitedFan();
+	DisableScatterFaN();
 }
 
-static void ToggleFaN(bool enable = true)
+stock void EnableScatterFaN()
 {
-	StoreToAddress(g_UnlimitedSelfForce, enable ? 0x00 : 0x01, NumberType_Int8);
+	for (int x; x < 6; x++)
+	{
+		StoreToAddress(g_ScatterSelfForce + view_as<Address>(x), 0x90, NumberType_Int8);
+	}
 }
 
-static void ToggleScatter(bool enable)
+stock void UnLimitedFan()
 {
-	for (int x; x < 7; x++)
-		StoreToAddress(g_ScatterSelfForce + view_as<Address>(x), enable ? 0x90 : OLD_Address[x], NumberType_Int8);
+	StoreToAddress(g_UnlimitedSelfForce + view_as<Address>(0x06), 0x00, NumberType_Int8);
+}
+
+stock void DisableScatterFaN()
+{
+	for (int x; x < 6; x++)
+		StoreToAddress(g_ScatterSelfForce + view_as<Address>(x), OLD_Address[x], NumberType_Int8);
+}
+
+stock void LimitedFan()
+{
+	StoreToAddress(g_UnlimitedSelfForce + view_as<Address>(0x06), 0x01, NumberType_Int8);
 }
