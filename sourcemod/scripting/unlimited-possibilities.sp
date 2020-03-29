@@ -13,7 +13,7 @@ bool LateLoaded;
 #undef REQUIRE_PLUGIN
 #tryinclude "possibilities/infinite_fan_push.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
-#include "possibilities/demo_newshield.sp"
+#tryinclude "possibilities/demo_newshield.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
