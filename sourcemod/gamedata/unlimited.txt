@@ -1,0 +1,59 @@
+"Games"
+{
+	"tf"
+	{
+		"Functions"
+		{
+			"FireBullet"
+			{
+				"signature"		"CTFScattergun::FireBullet"
+				"callconv"		"thiscall"
+				"this"			"entity"
+				"return"			"void"
+				"arguments"
+				{
+					"owner"
+					{
+						"type"	"cbaseentity"
+					}
+				}
+			}
+		}
+		"Addresses"
+		{
+			"CTFScattergun::FireBullet::AnyScatterFaN"
+			{
+				"signature"		"CTFScattergun::FireBullet"
+				"linux"
+				{
+					"offset"		"28"
+				}
+				"windows"
+				{
+					"offset"		"26"
+				}
+			}
+			"CTFScattergun::FireBullet::NoPushPenalty"
+			{
+				"signature"		"CTFScattergun::FireBullet"
+				"linux"
+				{
+					"offset"		"125"
+				}
+				"windows"
+				{
+					"offset"		"132"
+				}
+			}
+		}
+		"Signatures"
+		{
+			"CTFScattergun::FireBullet"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTFScatterGun10FireBulletEP9CTFPlayer"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x78\x53\x56\x57\x8B\xF9"
+			}
+		}
+	}
+}
