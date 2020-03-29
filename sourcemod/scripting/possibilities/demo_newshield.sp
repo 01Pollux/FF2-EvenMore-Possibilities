@@ -36,7 +36,6 @@ public bool NewShield_PrepareConfig(const GameData Config)
 			iShieldIndex[GetEntPropEnt(shield, Prop_Send, "m_hOwnerEntity")] = GetEntProp(shield, Prop_Send, "m_iItemDefinitionIndex");
 		}
 	}
-	PrintToServer("%s", LateLoaded ? "yes":"no");
 	
 	return (m_iEntityLevel != -1 && m_iEntityQuality != -1);
 }
