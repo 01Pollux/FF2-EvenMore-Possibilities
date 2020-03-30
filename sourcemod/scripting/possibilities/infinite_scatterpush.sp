@@ -9,9 +9,9 @@ static int OLD_Address[6];
 
 static ConVar cv_UnlimitedPushes;
 
-public bool FaN_PrepareConfig(const GameData Config)
+public bool FaN_PrepareConfig(GameData Config)
 {
-	Handle OnFireBullet = DHookCreateFromConf(Config, "FireBullet");
+	Handle OnFireBullet = DHookCreateFromConf(Config, "CTFScattergun::FireBullet");
 	if(OnFireBullet == null)
 		return false;
 	else if(!DHookEnableDetour(OnFireBullet, false, Pre_ScatterFireBullet))
@@ -42,13 +42,13 @@ public MRESReturn Pre_ScatterFireBullet(int weapon, Handle Params)
 	if(boss >= 0)
 		return MRES_Ignored;
 	
-	if(FF2_GetRoundState() != 1)
+	if(!RoundIsActive())
 		return MRES_Ignored;
 	
 	if(cv_UnlimitedPushes.BoolValue)
 		UnLimitedFan();
 	
-	int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+	int index = GetItemDefinitionIndex(weapon);
 	if(index != 1103 && index != 220)	//back scratcher && shortstop
 		return MRES_Ignored;
 		
@@ -61,6 +61,7 @@ public MRESReturn Post_ScatterFireBullet(int weapon, Handle Player)
 	LimitedFan();
 	DisableScatterFaN();
 }
+
 
 stock void EnableScatterFaN()
 {
