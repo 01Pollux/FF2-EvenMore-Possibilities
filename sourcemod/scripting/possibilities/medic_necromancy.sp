@@ -3,7 +3,7 @@
 #endif
 #define MEDIC_NECROMANCY
 
-#if !defined MAXCLIENTS 
+#if !defined MAXCLIENTS
 #define MAXCLIENTS (MAXPLAYERS + 1)
 #endif
 
@@ -38,10 +38,6 @@ public void CleanUp_OnPostRoundEnd(Event event, const char[] Name, bool broadcas
 	Minions.Clear();
 }
 
-public void OnMapStart()
-{
-	delete Minions;
-}
 
 public Action OnPlayerTaunt(int client, const char[] command, int arg)
 {
@@ -50,6 +46,9 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	
 	int boss = FF2_GetBossIndex(client);
 	if(boss >=0)
+		return Plugin_Continue;
+	
+	if(TF2_GetPlayerClass(client) != TFClass_Medic)
 		return Plugin_Continue;
 	
 	if(NextSummonTimer[client] >= GetGameTime())
