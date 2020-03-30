@@ -44,7 +44,7 @@ public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
 	int shield = EntRefToEntIndex(EntRef);
 	if(!IsValidEntity(shield))
 	{
-		int owner = GetEntPropEnt(shield, Prop_Send, "m_hOwnerEntity");
+		int owner = GethOwnerEntityOfEntity(shield);
 		RegShield(owner, shield);
 		SDKHook(owner, SDKHook_PostThinkPost, Post_DemoThinkPost);
 	}
@@ -58,7 +58,7 @@ public void Post_DemoThinkPost(int client)
 		return;
 	}
 	
-	if(FF2_GetRoundState() != 1 || TF2_GetPlayerClass(client) != TFClass_DemoMan || FF2_GetBossIndex(client) > -1)
+	if(!RoundIsActive() || TF2_GetPlayerClass(client) != TFClass_DemoMan || FF2_GetBossIndex(client) > -1)
 	{
 		UnHook(client);
 		return;
@@ -108,7 +108,7 @@ void UnHook(int client)
 	SDKUnhook(client, SDKHook_PostThinkPost, Post_DemoThinkPost);
 }
 
-static void RegShield(int owner, int shield)
+void RegShield(int owner, int shield)
 {
 	int index = iShield.FindValue(GetClientSerial(owner));
 	switch(index)
@@ -123,7 +123,7 @@ static void RegShield(int owner, int shield)
 	}
 }
 
-static int GetiDefShieldIndex(int Serial)
+int GetiDefShieldIndex(int Serial)
 {
 	int index = iShield.FindValue(Serial);
 	if(index == -1)
