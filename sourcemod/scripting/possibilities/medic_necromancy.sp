@@ -38,10 +38,9 @@ public void CleanUp_OnPostRoundEnd(Event event, const char[] Name, bool broadcas
 	Minions.Clear();
 }
 
-
 public Action OnPlayerTaunt(int client, const char[] command, int arg)
 {
-	if(FF2_GetRoundState() != 1)
+	if(!RoundIsActive())
 		return Plugin_Continue;
 	
 	int boss = FF2_GetBossIndex(client);
@@ -110,7 +109,7 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 
 public void Post_SummonPostThink(int client)
 {
-	if(FF2_GetRoundState() !=1)
+	if(!RoundIsActive())
 	{
 		EndHook(client);
 		return;
