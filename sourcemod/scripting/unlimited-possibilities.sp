@@ -14,6 +14,7 @@ bool LateLoaded;
 #tryinclude "possibilities/infinite_fan_push.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
 #tryinclude "possibilities/demo_newshield.sp"
+#include "possibilities/revive_marker.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
@@ -31,6 +32,14 @@ public APLRes AskPluginLoad2(Handle Plugin, bool late, char[] err, int err_max)
 }
 
 public void OnPluginStart()
+{
+	PrepareAllConfigs();
+	HookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
+	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
+	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
+}
+
+void PrepareAllConfigs()
 {
 	GameData Config = new GameData("unlimited");
 	
@@ -67,6 +76,16 @@ public void OnPluginStart()
 		return;
 	}
 #endif
+
+#if defined MARKER_DROPMERC
+	if(!Marker_PrepareConfig(Config))
+	{
+		delete Config;
+		SetFailState("[FF2] Failed to Load \"revive_marker.sp\"");
+		return;
+	}
+#endif
+
 	delete Config;
 }
 
@@ -81,17 +100,74 @@ public void OnMapStart()
 #endif
 }
 
+public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
+{
+#if defined MARKER_DROPMERC
+	for (int x = 1; x <= MaxClients; x++)
+	{
+		if(!IsClientInGame(x))
+			continue;
+		Revives[x] = 0;
+	}
+#endif
+}
+
+public void Post_PlayerSpawn(Event hEvent, const char[] Name, bool broadcast)
+{
+#if defined MARKER_DROPMERC
+	if(!RoundIsActive())
+		return;
+	int player = GetClientOfUserId(hEvent.GetInt("userid"));
+	Revives[player]++;
+	
+	if(hMarkerTimer[player] != null)
+	{
+		RemoveMarker(player);
+		delete hMarkerTimer[player];
+	}
+	else return;
+#endif
+}
+
+public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
+{
+#if defined MARKER_DROPMERC
+	if(!RoundIsActive())
+		return;
+	
+	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
+		return;
+	
+	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
+	if(Revives[victim] >= iMaxRevives.IntValue)
+		return;
+	
+	if(FF2_GetBossIndex(victim) != -1)
+		return;
+		
+	int marker = CreateEntityByName("entity_revive_marker");
+	if(!IsValidEntity(marker))	
+		return;
+	iMarker[victim] = EntIndexToEntRef(CreateReviveMarkerFrom(marker, victim));
+	RemoveEntity(marker);
+	
+	hMarkerTimer[victim] =  CreateTimer(GetMaxDecay(TF2_GetPlayerClass(victim)), Timer_RemoveMarker, GetClientSerial(victim), TIMER_FLAG_NO_MAPCHANGE);
+#endif
+}
+
+public void OnClientPostAdminCheck(int client)
+{
+#if defined MARKER_DROPMERC
+	Revives[client] = 0;
+#endif
+}
+
 public void OnEntityCreated(int entity, const char[] cls)
 {
 #if defined DEMO_NEWSHIELD
 	if(!strcmp(cls, "tf_wearable_demoshield"))
 		CreateTimer(0.1, Post_DemoShieldCreated, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 #endif
-}
-
-stock int GetItemDefinitionIndex(int iItem)
-{
-	return GetEntProp(iItem, Prop_Send, "m_iItemDefinitionIndex");
 }
 
 stock void CreateTimedParticle(int owner, const char[] Name, float SpawnPos[3], float duration)
@@ -129,6 +205,28 @@ stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3]
 	AcceptEntityInput(entity, "start");
 	
 	return entity;
-} 
+}
+
+stock bool RoundIsActive()
+{
+	return (FF2_GetRoundState() == 1);
+}
+
+stock int GethOwnerEntityOfEntity(int entity)
+{
+	return GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+}
+stock int GetItemDefinitionIndex(int iItem)
+{
+	return GetEntProp(iItem, Prop_Send, "m_iItemDefinitionIndex");
+}
+
+#if defined MARKER_DROPMERC
+stock int CreateReviveMarkerFrom(int Marker, int client)
+{
+	return SDKCall(SDKCreateReviveMarker, Marker, client);
+}
+#endif
+
 
 #file "[FF2] Unlimited Possibilities"
