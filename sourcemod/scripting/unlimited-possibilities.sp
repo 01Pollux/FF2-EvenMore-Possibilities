@@ -13,7 +13,6 @@ bool LateLoaded;
 #undef REQUIRE_PLUGIN
 #tryinclude "possibilities/infinite_fan_push.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
-#tryinclude "possibilities/demo_newshield.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
@@ -58,19 +57,21 @@ public void OnPluginStart()
 		return;
 	}
 #endif
-
-#if defined DEMO_NEWSHIELD
-	if(!NewShield_PrepareConfig(Config))
-	{
-		delete Config;
-		SetFailState("[FF2] Failed to Load \"demo_newshield.sp\","
-						..."Try updating your GameData");
-		return;
-	}
-#endif
 	delete Config;
 }
 
+public void OnMapStart()
+{
+#if defined MEDIC_NECROMANCY
+	delete Minions;
+#endif
+}
+
+
+stock int GetItemDefinitionIndex(int iItem)
+{
+	return GetEntProp(iItem, Prop_Send, "m_iItemDefinitionIndex");
+}
 
 stock void CreateTimedParticle(int owner, const char[] Name, float SpawnPos[3], float duration)
 {
@@ -100,7 +101,7 @@ stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3]
 	DispatchSpawn(entity);
 	
 	SetVariantString(buffer);
-	AcceptEntityInput(entity, "SetParent", entity, entity, 0);
+	AcceptEntityInput(entity, "SetParent", entity, entity);
 	
 	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", owner);
 	ActivateEntity(entity);
@@ -108,3 +109,5 @@ stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3]
 	
 	return entity;
 } 
+
+#file "[FF2] Unlimited Possibilities"
