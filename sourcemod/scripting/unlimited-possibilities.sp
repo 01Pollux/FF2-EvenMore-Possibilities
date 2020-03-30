@@ -13,6 +13,7 @@ bool LateLoaded;
 #undef REQUIRE_PLUGIN
 #tryinclude "possibilities/infinite_fan_push.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
+#tryinclude "possibilities/demo_newshield.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
@@ -57,16 +58,36 @@ public void OnPluginStart()
 		return;
 	}
 #endif
+
+#if defined DEMO_NEWSHIELD
+	if(!NewShield_PrepareConfig(Config))
+	{
+		delete Config;
+		SetFailState("[FF2] Failed to Load \"demo_newshield.sp\"");
+		return;
+	}
+#endif
 	delete Config;
 }
 
 public void OnMapStart()
 {
 #if defined MEDIC_NECROMANCY
-	delete Minions;
+	Minions.Clear();
+#endif
+
+#if defined DEMO_NEWSHIELD
+	iShield.Clear();
 #endif
 }
 
+public void OnEntityCreated(int entity, const char[] cls)
+{
+#if defined DEMO_NEWSHIELD
+	if(!strcmp(cls, "tf_wearable_demoshield"))
+		CreateTimer(0.1, Post_DemoShieldCreated, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+#endif
+}
 
 stock int GetItemDefinitionIndex(int iItem)
 {
