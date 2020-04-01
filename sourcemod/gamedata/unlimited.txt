@@ -4,7 +4,7 @@
 	{
 		"Functions"
 		{
-			"FireBullet"
+			"CTFScattergun::FireBullet"
 			{
 				"signature"		"CTFScattergun::FireBullet"
 				"callconv"		"thiscall"
@@ -15,6 +15,66 @@
 					"owner"
 					{
 						"type"	"cbaseentity"
+					}
+				}
+			}
+			"CTFPlayer::RegenThink"
+			{
+				"signature"		"CTFPlayer::RegenThink"
+				"callconv"		"thiscall"
+				"this"			"entity"
+				"return"			"void"
+			}
+			"JarExplode"
+			{
+				"signature"		"JarExplode"
+				"callconv"		"cdecl"
+				"return"			"void"
+				"arguments"
+				{
+					"filter"
+					{
+						"type"	"int"
+					}
+					"owner"
+					{
+						"type"	"cbaseentity"
+					}
+					"horiginal_launcher"
+					{
+						"type"	"cbaseentity"
+					}
+					"launcher"
+					{
+						"type"	"cbaseentity"
+					}
+					"position"
+					{
+						"type"	"vectorptr"
+					}
+					"team"
+					{
+						"type"	"int"
+					}
+					"radius"
+					{
+						"type"	"float"
+					}
+					"condition"
+					{
+						"type"	"int"
+					}
+					"duration"
+					{
+						"type"	"float"
+					}
+					"particle"
+					{
+						"type"	"charptr"
+					}
+					"sound"
+					{
+						"type"	"charptr"
 					}
 				}
 			}
@@ -45,6 +105,38 @@
 					"offset"		"132"
 				}
 			}
+			"CTFPlayer::RegenThink::CanRegen"
+			{
+				"signature"		"CTFPlayer::RegenThink"
+				"linux"
+				{
+					"offset"		"172"
+				}
+				"windows"
+				{
+					"offset"		"128"
+				}
+			}
+			"JarExplode::PissJar"
+			{
+				"signature"		"JarExplode"
+				"linux"
+				{
+					"offset"		"4526"
+				}
+				"windows"
+				{
+					"offset"		"1057"
+				}
+			}
+			"JarExplode::GasJar"
+			{
+				"signature"		"JarExplode"
+				"windows"
+				{
+					"offset"		"1048"
+				}
+			}
 		}
 		"Signatures"
 		{
@@ -53,6 +145,30 @@
 				"library"	"server"
 				"linux"		"@_ZN13CTFScatterGun10FireBulletEP9CTFPlayer"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x78\x53\x56\x57\x8B\xF9"
+			}
+			"CTFReviveMarker::Create"
+			{
+				"library"	"server"
+				"linux"		"@_ZN15CTFReviveMarker6CreateEP9CTFPlayer"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x0C\x53\x57\x8B\x7D\x08\x85\xFF"
+			}
+			"CTFWeaponBase::CalcIsAttackCriticalHelper"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTFWeaponBase26CalcIsAttackCriticalHelperEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x14\x56\x57\x6A\x00"
+			}
+			"CTFPlayer::RegenThink"
+			{
+				"library"		"server"
+				"linux"			"@_ZN9CTFPlayer10RegenThinkEv"
+				"windows"		"\x55\x8B\xEC\x83\xEC\x74\x57\x8B\xF9\x8B\x07"
+			}
+			"JarExplode"
+			{
+				"library"	"server"
+				"linux"		"@_Z10JarExplodeiP9CTFPlayerP11CBaseEntityS2_RK6Vectorif7ETFCondfPKcS8_"
+				"windows"	"\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x04\x89\x6C\x24\x04\x8B\xEC\x81\xEC\xD8\x01\x00\x00\x56\x57\x8D\x8D\x64\xFF\xFF\xFF"
 			}
 		}
 		"Offsets"
