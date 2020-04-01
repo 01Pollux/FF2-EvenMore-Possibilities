@@ -1,7 +1,9 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <dhooks>
+#undef REQUIRE_PLUGIN
+#tryinclude <dhooks>
+#define REQUIRE_PLUGIN
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <freak_fortress_2>
@@ -14,12 +16,14 @@ bool LateLoaded;
 #tryinclude "possibilities/infinite_fan_push.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
 #tryinclude "possibilities/demo_newshield.sp"
-#include "possibilities/revive_marker.sp"
+#tryinclude "possibilities/revive_marker.sp"
+#tryinclude "possibilities/classes_regen.sp"
+#tryinclude "possibilities/teleporting_jarate.sp"
 #define REQUIRE_PLUGIN
 
 public Plugin myinfo = 
 {
-	name			= "[FF2] Unlimited Possibilities",
+	name			= "[FF2] Even More Possibilities",
 	author		= "[01]Pollux.",
 	version		= "1.0",
 	url 			= "go-away.net"
@@ -28,18 +32,17 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle Plugin, bool late, char[] err, int err_max)
 {
 	LateLoaded = late;
-	return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
-	PrepareAllConfigs();
+	StartConfig();
 	HookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
 	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
 	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
 }
 
-void PrepareAllConfigs()
+static void StartConfig()
 {
 	GameData Config = new GameData("unlimited");
 	
@@ -53,8 +56,7 @@ void PrepareAllConfigs()
 	if(!FaN_PrepareConfig(Config))
 	{
 		delete Config;
-		SetFailState("[FF2] Failed to Load \"infinite_fan_push.sp\","
-						..."Try updating your GameData");
+		SetFailState("[GameData] Failed to Load \"infinite_fan_push.sp\"");
 		return;
 	}
 #endif
@@ -72,7 +74,7 @@ void PrepareAllConfigs()
 	if(!NewShield_PrepareConfig(Config))
 	{
 		delete Config;
-		SetFailState("[FF2] Failed to Load \"demo_newshield.sp\"");
+		SetFailState("[GameData] Failed to Load \"demo_newshield.sp\"");
 		return;
 	}
 #endif
@@ -81,7 +83,25 @@ void PrepareAllConfigs()
 	if(!Marker_PrepareConfig(Config))
 	{
 		delete Config;
-		SetFailState("[FF2] Failed to Load \"revive_marker.sp\"");
+		SetFailState("[GameData] Failed to Load \"revive_marker.sp\"");
+		return;
+	}
+#endif
+
+#if defined CLASSES_REGEN
+	if(!Regen_PrepareConfig(Config))
+	{
+		delete Config;
+		SetFailState("[GameData] Failed to Load \"classes_regen.sp\"");
+		return;
+	}
+#endif
+
+#if defined TELEPORING_JARATE
+	if(!Teleport_PrepareConfig(Config))
+	{
+		delete Config;
+		SetFailState("[GameData] Failed to Load \"teleporting_jarate.sp\"");
 		return;
 	}
 #endif
@@ -142,15 +162,15 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 	if(Revives[victim] >= iMaxRevives.IntValue)
 		return;
 	
-	if(FF2_GetBossIndex(victim) != -1)
+	if(FF2_GetBossIndex(victim) > -1)
 		return;
 		
 	int marker = CreateEntityByName("entity_revive_marker");
 	if(!IsValidEntity(marker))	
 		return;
+		
 	iMarker[victim] = EntIndexToEntRef(CreateReviveMarkerFrom(marker, victim));
 	RemoveEntity(marker);
-	
 	hMarkerTimer[victim] =  CreateTimer(GetMaxDecay(TF2_GetPlayerClass(victim)), Timer_RemoveMarker, GetClientSerial(victim), TIMER_FLAG_NO_MAPCHANGE);
 #endif
 }
@@ -159,6 +179,20 @@ public void OnClientPostAdminCheck(int client)
 {
 #if defined MARKER_DROPMERC
 	Revives[client] = 0;
+#endif
+}
+
+public void OnClientDisconnect(int client)
+{
+#if defined MARKER_DROPMERC
+	Revives[client] = 0;
+	int marker = EntIndexToEntRef(iMarker[client]);
+	if(IsValidEntity(marker)){
+		iMarker[client] = INVALID_ENT_REFERENCE;
+		RemoveEntity(marker);
+	}
+	if(hMarkerTimer[client] != null)
+		delete hMarkerTimer[client];
 #endif
 }
 
@@ -204,7 +238,7 @@ stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3]
 	ActivateEntity(entity);
 	AcceptEntityInput(entity, "start");
 	
-	return entity;
+	return entity; 
 }
 
 stock bool RoundIsActive()
@@ -229,4 +263,4 @@ stock int CreateReviveMarkerFrom(int Marker, int client)
 #endif
 
 
-#file "[FF2] Unlimited Possibilities"
+#file "[FF2] Even More Possibilities"
