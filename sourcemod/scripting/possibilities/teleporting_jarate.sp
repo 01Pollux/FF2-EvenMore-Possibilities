@@ -32,7 +32,7 @@ public MRESReturn Pre_JarExplode(Handle Params)
 	if(TF2_GetPlayerClass(owner) == TFClass_Scout && !g_AllowScout.BoolValue)
 		return MRES_Ignored;
 	
-	else if(TF2_GetPlayerClass(owner) == TFClass_Scout && !g_AllowPyro.BoolValue)
+	else if(TF2_GetPlayerClass(owner) == TFClass_Pyro && !g_AllowPyro.BoolValue)
 		return MRES_Ignored;
 	
 	static float Pos[3], EndPos[3];
