@@ -128,6 +128,9 @@ public bool Trace_CheckIfStuck(int entity, int content, any client)
 	if(!entity)
 		return false;
 	
+	if(entity > MaxClients)
+		return true;
+	
 	if(GetClientTeam(client) == GetClientTeam(entity))
 		return false;
 		
