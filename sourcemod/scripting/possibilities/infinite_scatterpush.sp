@@ -34,12 +34,8 @@ public bool FaN_PrepareConfig(GameData Config)
 
 public MRESReturn Pre_ScatterFireBullet(int weapon, Handle Params)
 {
-	LimitedFan();
-	DisableScatterFaN();
-	
 	int client = DHookGetParam(Params, 1);
-	int boss = FF2_GetBossIndex(client);
-	if(boss >= 0)
+	if(FF2_GetBossIndex(client) > -1)
 		return MRES_Ignored;
 	
 	if(!RoundIsActive())
