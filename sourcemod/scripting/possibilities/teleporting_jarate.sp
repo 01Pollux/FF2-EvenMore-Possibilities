@@ -1,7 +1,7 @@
-#if defined TELEPORING_JARATE
+#if defined TELEPORTING_JARATE
 	#endinput
 #endif
-#define TELEPORING_JARATE
+#define TELEPORTING_JARATE
 
 static ConVar g_AllowScout;
 static ConVar g_AllowPyro;
