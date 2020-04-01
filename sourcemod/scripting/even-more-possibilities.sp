@@ -97,7 +97,7 @@ static void StartConfig()
 	}
 #endif
 
-#if defined TELEPORING_JARATE
+#if defined TELEPORTING_JARATE
 	if(!Teleport_PrepareConfig(Config))
 	{
 		delete Config;
