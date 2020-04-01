@@ -71,42 +71,42 @@ bool IsValidPointToTeleport(int client, const float Position[3], float EndPositi
 				
 				switch(x)
 				{
-					case 0: TestPosition[0] = TestPosition[0] < 0 ? TestPosition[0] + 10.0:TestPosition[0] -10.0;
-					case 1: TestPosition[0] = TestPosition[0] > 0 ? TestPosition[0] + 10.0:TestPosition[0] -10.0;
-					case 2: TestPosition[0] = TestPosition[0] < 0 ? TestPosition[0] + 15.0:TestPosition[0] -15.0;
-					case 3: TestPosition[0] = TestPosition[0] > 0 ? TestPosition[0] + 15.0:TestPosition[0] -15.0;
-					case 4: TestPosition[0] = TestPosition[0] < 0 ? TestPosition[0] + 20.0:TestPosition[0] -20.0;
-					case 5: TestPosition[0] = TestPosition[0] > 0 ? TestPosition[0] + 20.0:TestPosition[0] -20.0;
-					case 6: TestPosition[0] = TestPosition[0] < 0 ? TestPosition[0] + 30.0:TestPosition[0] -30.0;
-					case 7: TestPosition[0] = TestPosition[0] > 0 ? TestPosition[0] + 30.0:TestPosition[0] -30.0;
-					case 8: TestPosition[0] = TestPosition[0] < 0 ? TestPosition[0] + 50.0:TestPosition[0] -50.0;
-					case 9: TestPosition[0] = TestPosition[0] > 0 ? TestPosition[0] + 50.0:TestPosition[0] -50.0;
+					case 0: TestPosition[0] += 10.0;
+					case 1: TestPosition[0] -= 10.0;
+					case 2: TestPosition[0] += 15.0;
+					case 3: TestPosition[0] -= 15.0;
+					case 4: TestPosition[0] += 20.0;
+					case 5: TestPosition[0] -= 20.0;
+					case 6: TestPosition[0] += 30.0;
+					case 7: TestPosition[0] -= 30.0;
+					case 8: TestPosition[0] += 50.0;
+					case 9: TestPosition[0] -= 50.0;
 				}
 				switch(y)
 				{
-					case 0: TestPosition[1] = TestPosition[1] < 0 ? TestPosition[1] + 10.0:TestPosition[1] -10.0;
-					case 1: TestPosition[1] = TestPosition[1] > 0 ? TestPosition[1] + 10.0:TestPosition[1] -10.0;
-					case 2: TestPosition[1] = TestPosition[1] < 0 ? TestPosition[1] + 15.0:TestPosition[1] -15.0;
-					case 3: TestPosition[1] = TestPosition[1] > 0 ? TestPosition[1] + 15.0:TestPosition[1] -15.0;
-					case 4: TestPosition[1] = TestPosition[1] < 0 ? TestPosition[1] + 20.0:TestPosition[1] -20.0;
-					case 5: TestPosition[1] = TestPosition[1] > 0 ? TestPosition[1] + 20.0:TestPosition[1] -20.0;
-					case 6: TestPosition[1] = TestPosition[1] < 0 ? TestPosition[1] + 30.0:TestPosition[1] -30.0;
-					case 7: TestPosition[1] = TestPosition[1] > 0 ? TestPosition[1] + 30.0:TestPosition[1] -30.0;
-					case 8: TestPosition[1] = TestPosition[1] < 0 ? TestPosition[1] + 00:TestPosition[1] -50.0;
-					case 9: TestPosition[1] = TestPosition[1] > 0 ? TestPosition[1] + 00:TestPosition[1] -50.0;
+					case 0: TestPosition[1] += 10.0;
+					case 1: TestPosition[1] -= 10.0;
+					case 2: TestPosition[1] += 15.0;
+					case 3: TestPosition[1] -= 15.0;
+					case 4: TestPosition[1] += 20.0;
+					case 5: TestPosition[1] -= 20.0;
+					case 6: TestPosition[1] += 30.0;
+					case 7: TestPosition[1] -= 30.0;
+					case 8: TestPosition[1] += 50.0;
+					case 9: TestPosition[1] -= 50.0;
 				}
 				switch(z)
 				{
-					case 0: TestPosition[2] = TestPosition[2] < 0 ? TestPosition[2] + 10.0:TestPosition[2] -10.0;
-					case 1: TestPosition[2] = TestPosition[2] > 0 ? TestPosition[2] + 10.0:TestPosition[2] -10.0;
-					case 2: TestPosition[2] = TestPosition[2] < 0 ? TestPosition[2] + 15.0:TestPosition[2] -15.0;
-					case 3: TestPosition[2] = TestPosition[2] > 0 ? TestPosition[2] + 15.0:TestPosition[2] -15.0;
-					case 4: TestPosition[2] = TestPosition[2] < 0 ? TestPosition[2] + 20.0:TestPosition[2] -20.0;
-					case 5: TestPosition[2] = TestPosition[2] > 0 ? TestPosition[2] + 20.0:TestPosition[2] -20.0;
-					case 6: TestPosition[2] = TestPosition[2] < 0 ? TestPosition[2] + 30.0:TestPosition[2] -30.0;
-					case 7: TestPosition[2] = TestPosition[2] > 0 ? TestPosition[2] + 30.0:TestPosition[2] -30.0;
-					case 8: TestPosition[2] = TestPosition[2] < 0 ? TestPosition[2] + 50.0:TestPosition[2] -50.0;
-					case 9: TestPosition[2] = TestPosition[2] > 0 ? TestPosition[2] + 50.0:TestPosition[2] -50.0;
+					case 0: TestPosition[2] += 10.0;
+					case 1: TestPosition[2] -= 10.0;
+					case 2: TestPosition[2] += 15.0;
+					case 3: TestPosition[2] -= 15.0;
+					case 4: TestPosition[2] += 20.0;
+					case 5: TestPosition[2] -= 20.0;
+					case 6: TestPosition[2] += 30.0;
+					case 7: TestPosition[2] -= 30.0;
+					case 8: TestPosition[2] += 50.0;
+					case 9: TestPosition[2] -= 50.0;
 				}
 					
 				Trace = TR_TraceHullFilterEx(TestPosition, TestPosition, vecMins, vecMaxs, MASK_PLAYERSOLID, Trace_CheckIfStuck, client);
