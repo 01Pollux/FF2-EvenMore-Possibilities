@@ -27,7 +27,7 @@ public bool Marker_PrepareConfig(const GameData Config)
 	
 	iMaxRevives = CreateConVar("rm_max_revives", "1", "Max revives a client can have");
 	flDecayTime = CreateConVar("rm_max_decay", "10.0", "Decay time for revive marker");
-	flHeavyExtra = CreateConVar("rm_max_decay", "1.4", "Optional, Heavy's extra time for decay");
+	flHeavyExtra = CreateConVar("rm_max_decay_mult", "1.4", "Optional, Heavy's extra time for decay");
 	
 	return true;
 }
@@ -43,8 +43,9 @@ void RemoveMarker(int client)
 	int marker = EntRefToEntIndex(iMarker[client]);
 	if(IsValidEntity(marker))
 	{
+		iMarker[client] = INVALID_ENT_REFERENCE;
 		static float pos[3];
-		GetClientAbsOrigin(client, pos);
+		GetEntPropVector(marker, Prop_Send, "m_vecOrigin", pos);
 		RemoveEntity(marker);
 		pos[2] += 30.0;
 		CreateTimedParticle(client, "ghost_smoke", pos, 0.5);
