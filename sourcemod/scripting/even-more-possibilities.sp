@@ -243,6 +243,8 @@ stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3]
 
 stock bool RoundIsActive()
 {
+	if(!FF2_IsFF2Enabled())
+		return false;
 	return (FF2_GetRoundState() == 1);
 }
 
