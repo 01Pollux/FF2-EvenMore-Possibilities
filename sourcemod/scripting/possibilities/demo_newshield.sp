@@ -42,7 +42,7 @@ public bool NewShield_PrepareConfig(const GameData Config)
 public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
 {
 	int shield = EntRefToEntIndex(EntRef);
-	if(!IsValidEntity(shield))
+	if(IsValidEntity(shield))
 	{
 		int owner = GethOwnerEntityOfEntity(shield);
 		RegShield(owner, shield);
