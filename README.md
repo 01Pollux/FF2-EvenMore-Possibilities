@@ -1,4 +1,4 @@
-# FF2-Unlimited-Possibilities
+# FF2 Even More Possibilities
 
 The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 
