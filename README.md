@@ -37,7 +37,7 @@ The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 
 -tj_allowscout : allow scouts to use mad milk.
 
--tj_allowscout : allow scouts to use gas tank.
+-tj_allowpyro : allow pyros to use gas tank.
 
 
 ## Revive-Marker :
