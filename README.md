@@ -36,6 +36,7 @@ The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 ###### better use of jarate/madmilk/gas tank, name is self explanatory.
 
 -tj_allowscout : allow scouts to use mad milk.
+
 -tj_allowscout : allow scouts to use gas tank.
 
 
@@ -44,7 +45,9 @@ The idea was originated from http://forums.alliedmods.net/showpost.php?p=2210176
 ###### Revive your dead teammates.
 
 -rm_max_revives : Max revives a client can have.
+
 -rm_max_decay : Decay time for revive marker.
+
 -rm_max_decay_mult : Optional, Heavy's extra time for decay.
 
 
