@@ -192,7 +192,7 @@ public void OnClientDisconnect(int client)
 {
 #if defined MARKER_DROPMERC
 	Revives[client] = 0;
-	int marker = EntIndexToEntRef(iMarker[client]);
+	int marker = EntRefToEntIndex(iMarker[client]);
 	if(IsValidEntity(marker)){
 		iMarker[client] = INVALID_ENT_REFERENCE;
 		RemoveEntity(marker);
