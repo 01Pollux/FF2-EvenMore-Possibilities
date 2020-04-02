@@ -52,13 +52,10 @@ public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
 
 public void Post_DemoThinkPost(int client)
 {
-	if(!IsPlayerAlive(client))
-	{
-		UnHook(client);
+	if(!RoundIsActive())
 		return;
-	}
 	
-	if(!RoundIsActive() || TF2_GetPlayerClass(client) != TFClass_DemoMan || FF2_GetBossIndex(client) > -1)
+	if(TF2_GetPlayerClass(client) != TFClass_DemoMan || FF2_GetBossIndex(client) > -1)
 	{
 		UnHook(client);
 		return;
@@ -66,6 +63,7 @@ public void Post_DemoThinkPost(int client)
 	
 	if(FF2_GetClientShield(client) != 0.0)
 		return;
+	
 	
 	CreateTimer(RegenDuration.FloatValue, Timer_SetShieldBack, GetClientSerial(client), TIMER_FLAG_NO_MAPCHANGE);
 	UnHook(client);
@@ -76,6 +74,9 @@ public Action Timer_SetShieldBack(Handle Timer, any Serial)
 {
 	int client = GetClientFromSerial(Serial);
 	if(!IsPlayerAlive(client))
+		return Plugin_Continue;
+	
+	if(TF2_GetPlayerClass(client) != TFClass_DemoMan || !RoundIsActive() || FF2_GetBossIndex(client) > -1)
 		return Plugin_Continue;
 	
 	int index = GetiDefShieldIndex(Serial);
