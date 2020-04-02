@@ -157,7 +157,7 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 	
 	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
 		return;
-	
+
 	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
 	if(Revives[victim] >= iMaxRevives.IntValue)
 		return;
@@ -168,10 +168,17 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 	int marker = CreateEntityByName("entity_revive_marker");
 	if(!IsValidEntity(marker))	
 		return;
-		
+	
 	iMarker[victim] = EntIndexToEntRef(CreateReviveMarkerFrom(marker, victim));
 	RemoveEntity(marker);
 	hMarkerTimer[victim] =  CreateTimer(GetMaxDecay(TF2_GetPlayerClass(victim)), Timer_RemoveMarker, GetClientSerial(victim), TIMER_FLAG_NO_MAPCHANGE);
+#endif
+
+#if defined DEMO_NEWSHIELD
+	#if !defined MARKER_DROPMERC
+	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
+	#endif
+	SDKUnhook(victim, SDKHook_PostThinkPost, Post_DemoThinkPost);
 #endif
 }
 
@@ -265,4 +272,4 @@ stock int CreateReviveMarkerFrom(int Marker, int client)
 #endif
 
 
-#file "[FF2] Even More Possibilities"
+#file "[FF2] Unlimited Possibilities"
