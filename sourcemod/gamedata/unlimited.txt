@@ -117,26 +117,6 @@
 					"offset"		"128"
 				}
 			}
-			"JarExplode::PissJar"
-			{
-				"signature"		"JarExplode"
-				"linux"
-				{
-					"offset"		"4526"
-				}
-				"windows"
-				{
-					"offset"		"1057"
-				}
-			}
-			"JarExplode::GasJar"
-			{
-				"signature"		"JarExplode"
-				"windows"
-				{
-					"offset"		"1048"
-				}
-			}
 		}
 		"Signatures"
 		{
@@ -151,12 +131,6 @@
 				"library"	"server"
 				"linux"		"@_ZN15CTFReviveMarker6CreateEP9CTFPlayer"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x0C\x53\x57\x8B\x7D\x08\x85\xFF"
-			}
-			"CTFWeaponBase::CalcIsAttackCriticalHelper"
-			{
-				"library"	"server"
-				"linux"		"@_ZN13CTFWeaponBase26CalcIsAttackCriticalHelperEv"
-				"windows"	"\x55\x8B\xEC\x83\xEC\x14\x56\x57\x6A\x00"
 			}
 			"CTFPlayer::RegenThink"
 			{
