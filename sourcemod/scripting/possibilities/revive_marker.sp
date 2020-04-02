@@ -8,9 +8,9 @@
 #endif
 
 Handle SDKCreateReviveMarker;
-Handle hMarkerTimer[MAXCLIENTS];
+Handle hMarkerTimer[MAXCLIENTS] =  { null, ... };
 int Revives[MAXCLIENTS];
-int iMarker[MAXCLIENTS];
+int iMarker[MAXCLIENTS] =  { INVALID_ENT_REFERENCE, ... };
 
 ConVar iMaxRevives;
 static ConVar flDecayTime;
