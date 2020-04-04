@@ -10,6 +10,7 @@ static ConVar cv_AllowedClasses;
 static char g_sClasses[78];
 
 static const char TF2_ClassName[][] = {
+	"none",
 	"scout",
 	"sniper",
 	"soldier",
@@ -45,47 +46,41 @@ public bool Regen_PrepareConfig(const GameData Config)
 	return true;
 }
 
+static bool bCanRegen = false;
 public MRESReturn Pre_RegenThink(int player)
 {
+	if(!RoundIsActive())
+		return MRES_Ignored;
+		
 	if(FF2_GetBossIndex(player) > -1)
 		return MRES_Ignored;
 	
-	if(!RoundIsActive())
+	bCanRegen = false;
+	
+	if(StrContains(g_sClasses, TF2_ClassName[view_as<int>(TF2_GetPlayerClass(player))])  == -1)
 		return MRES_Ignored;
 	
-	if(StrContains(g_sClasses, TF2_ClassName[view_as<int>(TF2_GetPlayerClass(player)) - 1])  == -1)
-		return MRES_Ignored;
+	bCanRegen = true;
+	EnableRegen();
 	
-	static char cls[9][12];
-	int size = ExplodeString(g_sClasses, " ; ", cls, 9, 12);
-	
-	TFClassType curClass = TF2_GetPlayerClass(player);
-	
-	for (; size > 0; size--)
-	{
-		if(curClass == TF2_GetClass(cls[size - 1]))
-		{
-			EnableRegen();
-			break;
-		}
+	return MRES_Ignored;
+}
+
+public MRESReturn Post_RegenThink(int player) 
+{
+	if(bCanRegen){
+		DisableRegen();
+		bCanRegen = false;
 	}
 	return MRES_Ignored;
 }
 
-public MRESReturn Post_RegenThink(int player)
-{
-	DisableRegen();
-	return MRES_Ignored;
-}
-
-static void EnableRegen()
-{
+static void EnableRegen() {
 	for (int x; x < 6; x++)
 		StoreToAddress(g_aRegenThink + view_as<Address>(x), 0x90, NumberType_Int8);
 }
 
-static void DisableRegen()
-{
+static void DisableRegen() {
 	for (int x; x < 6; x++)
 		StoreToAddress(g_aRegenThink + view_as<Address>(x), OLD_Address[x], NumberType_Int8);
 }
