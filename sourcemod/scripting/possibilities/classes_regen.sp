@@ -47,7 +47,7 @@ public bool Regen_PrepareConfig(const GameData Config)
 	
 	return true;
 }
-public void OnClassesChange(ConVar cConVar, const cvar[] oldVal, const char[] newVal)
+public void OnClassesChange(ConVar cConVar, const char[] oldVal, const char[] newVal)
 {
 	cv_AllowedClasses.GetString(g_sClasses, sizeof(g_sClasses));
 }
