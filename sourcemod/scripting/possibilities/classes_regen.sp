@@ -43,7 +43,13 @@ public bool Regen_PrepareConfig(const GameData Config)
 	cv_AllowedClasses = CreateConVar("rt_classes", "sniper ; heavy ; spy ; engineer", "Allow Those classes to get regenerated over time");
 	cv_AllowedClasses.GetString(g_sClasses, sizeof(g_sClasses));
 	
+	cv_AllowedClasses.AddChangeHook(OnClassesChange);
+	
 	return true;
+}
+public void OnClassesChange(ConVar cConVar, const cvar[] oldVal, const char[] newVal)
+{
+	cv_AllowedClasses.GetString(g_sClasses, sizeof(g_sClasses));
 }
 
 static bool bCanRegen = false;
