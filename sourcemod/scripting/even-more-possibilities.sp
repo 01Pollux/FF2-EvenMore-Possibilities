@@ -113,11 +113,11 @@ static void StartConfig()
 public void OnMapStart()
 {
 #if defined MEDIC_NECROMANCY
-	Minions.Clear();
+	delete Minions;
 #endif
 
 #if defined DEMO_NEWSHIELD
-	iShield.Clear();
+	delete iShield;
 #endif
 }
 
