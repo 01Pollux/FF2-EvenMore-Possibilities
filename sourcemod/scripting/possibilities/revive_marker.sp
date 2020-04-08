@@ -8,7 +8,6 @@
 #endif
 
 Handle SDKCreateReviveMarker;
-Handle hMarkerTimer[MAXCLIENTS] =  { null, ... };
 int Revives[MAXCLIENTS];
 int iMarker[MAXCLIENTS] =  { INVALID_ENT_REFERENCE, ... };
 
@@ -32,6 +31,55 @@ public bool Marker_PrepareConfig(const GameData Config)
 	return true;
 }
 
+public void Marker_PlayerSpawn(int player)
+{
+	if(!RoundIsActive())
+		return;
+#if defined MEDIC_NECROMANCY
+	if(!medic_revive)
+		Revives[player]++;
+#else
+	Revives[player]++;
+#endif
+	RemoveMarker(player);
+}
+
+public void Marker_PlayerDeath(int victim)
+{
+	if(!RoundIsActive())
+	return;
+	
+	if(Revives[victim] >= iMaxRevives.IntValue)
+		return;
+	
+	if(FF2_GetBossIndex(victim) > -1)
+		return;
+		
+	int marker = CreateEntityByName("entity_revive_marker");
+	if(!IsValidEntity(marker))	
+		return;
+	
+	iMarker[victim] = EntIndexToEntRef(CreateReviveMarkerFrom(marker, victim));
+	RemoveEntity(marker);
+	CreateTimer(GetMaxDecay(TF2_GetPlayerClass(victim)), Timer_RemoveMarker, GetClientSerial(victim), TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public void Marker_PlayerDisconnect(int client)
+{
+	if(iMarker[client] == INVALID_ENT_REFERENCE)
+		return;
+	int marker = EntRefToEntIndex(iMarker[client]);
+	if(IsValidEntity(marker)){
+		iMarker[client] = INVALID_ENT_REFERENCE;
+		RemoveEntity(marker);
+	}
+}
+
+public void Marker_PlayerPutInServer(int client)
+{
+	Revives[client] = 0;
+}
+
 public Action Timer_RemoveMarker(Handle Timer, any Serial)
 {
 	int victim = GetClientFromSerial(Serial);
@@ -44,11 +92,11 @@ void RemoveMarker(int client)
 	if(IsValidEntity(marker))
 	{
 		iMarker[client] = INVALID_ENT_REFERENCE;
-		static float pos[3];
+		float pos[3];
 		GetEntPropVector(marker, Prop_Send, "m_vecOrigin", pos);
-		RemoveEntity(marker);
 		pos[2] += 30.0;
-		CreateTimedParticle(client, "ghost_smoke", pos, 0.5);
+		CreateTimedParticle(marker, "ghost_smoke", pos, 0.5);
+		RemoveEntity(marker);
 	}
 }
 
