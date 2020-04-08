@@ -111,7 +111,6 @@ public void Medic_PlayerDeath(int client)
 {
 	int index = Minions.FindValue(GetClientSerial(client), 1);
 	if(index != -1){
-		PrintToChatAll("index : %i, vicitim : %N, owner: %N", index, GetClientFromSerial(Minions.Get(index, 1)), GetClientFromSerial(Minions.Get(index, 0)));
 		Minions.Erase(index);
 	}
 	EndHook(client);
