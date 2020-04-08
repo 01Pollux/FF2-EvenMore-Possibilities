@@ -39,6 +39,11 @@ public bool NewShield_PrepareConfig(const GameData Config)
 	return true;
 }
 
+public void Shield_PlayerDeath(int player)
+{
+	SDKUnhook(player, SDKHook_PostThinkPost, Post_DemoThinkPost);
+}
+
 public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
 {
 	int shield = EntRefToEntIndex(EntRef);
