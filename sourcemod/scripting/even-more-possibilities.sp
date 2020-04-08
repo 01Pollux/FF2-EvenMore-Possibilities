@@ -40,6 +40,14 @@ public void OnPluginStart()
 	HookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
 	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
 	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
+	HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
+	RegConsoleCmd("revive", Cmd_Revive);
+}
+
+public Action Cmd_Revive(int a, int z)
+{
+	TF2_RespawnPlayer(a);
+	return Plugin_Handled;
 }
 
 static void StartConfig()
@@ -132,74 +140,51 @@ public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
 #endif
 }
 
+public void Post_RoundEnd(Event event, const char[] Name, bool broadcast)
+{
+#if defined MEDIC_NECROMANCY
+	Minions.Clear();
+#endif
+}
+
 public void Post_PlayerSpawn(Event hEvent, const char[] Name, bool broadcast)
 {
-#if defined MARKER_DROPMERC
-	if(!RoundIsActive())
-		return;
 	int player = GetClientOfUserId(hEvent.GetInt("userid"));
-	Revives[player]++;
-	
-	if(hMarkerTimer[player] != null)
-	{
-		RemoveMarker(player);
-		delete hMarkerTimer[player];
-	}
-	else return;
+#if defined MARKER_DROPMERC
+	Marker_PlayerSpawn(player);
 #endif
 }
 
 public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 {
-#if defined DEMO_NEWSHIELD
+	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
+		return;
+	
 	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
-	SDKUnhook(victim, SDKHook_PostThinkPost, Post_DemoThinkPost);
+#if defined DEMO_NEWSHIELD
+	Shield_PlayerDeath(victim);
 #endif
 
 #if defined MARKER_DROPMERC
-	if(!RoundIsActive())
-		return;
-	
-	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
-		return;
-#if !defined DEMO_NEWSHIELD
-	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
+	Marker_PlayerDeath(victim);
 #endif
-	if(Revives[victim] >= iMaxRevives.IntValue)
-		return;
-	
-	if(FF2_GetBossIndex(victim) > -1)
-		return;
-		
-	int marker = CreateEntityByName("entity_revive_marker");
-	if(!IsValidEntity(marker))	
-		return;
-	
-	iMarker[victim] = EntIndexToEntRef(CreateReviveMarkerFrom(marker, victim));
-	RemoveEntity(marker);
-	hMarkerTimer[victim] =  CreateTimer(GetMaxDecay(TF2_GetPlayerClass(victim)), Timer_RemoveMarker, GetClientSerial(victim), TIMER_FLAG_NO_MAPCHANGE);
+
+#if defined MEDIC_NECROMANCY
+	Medic_PlayerDeath(victim);
 #endif
 }
 
-public void OnClientPostAdminCheck(int client)
+public void OnClientPutInServer(int client)
 {
 #if defined MARKER_DROPMERC
-	Revives[client] = 0;
+	Marker_PlayerPutInServer(client);
 #endif
 }
 
 public void OnClientDisconnect(int client)
 {
 #if defined MARKER_DROPMERC
-	if(iMarker[client] == INVALID_ENT_REFERENCE)
-		return;
-	int marker = EntRefToEntIndex(iMarker[client]);
-	if(IsValidEntity(marker)){
-		iMarker[client] = INVALID_ENT_REFERENCE;
-		RemoveEntity(marker);
-	}
-	if(hMarkerTimer[client] != null)
-		delete hMarkerTimer[client];
+	Marker_PlayerDisconnect(client);
 #endif
 }
 
