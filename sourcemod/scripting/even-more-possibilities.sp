@@ -41,13 +41,6 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
 	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
-	RegConsoleCmd("revive", Cmd_Revive);
-}
-
-public Action Cmd_Revive(int a, int z)
-{
-	TF2_RespawnPlayer(a);
-	return Plugin_Handled;
 }
 
 static void StartConfig()
