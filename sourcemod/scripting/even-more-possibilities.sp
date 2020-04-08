@@ -123,6 +123,8 @@ public void OnMapStart()
 
 public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
 {
+	if(!RoundIsActive())
+		return;
 #if defined MARKER_DROPMERC
 	for (int x = 1; x <= MaxClients; x++)
 	{
@@ -135,6 +137,8 @@ public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
 
 public void Post_RoundEnd(Event event, const char[] Name, bool broadcast)
 {
+	if(!RoundIsActive())
+		return;
 #if defined MEDIC_NECROMANCY
 	Minions.Clear();
 #endif
@@ -142,6 +146,8 @@ public void Post_RoundEnd(Event event, const char[] Name, bool broadcast)
 
 public void Post_PlayerSpawn(Event hEvent, const char[] Name, bool broadcast)
 {
+	if(!RoundIsActive())
+		return;
 	int player = GetClientOfUserId(hEvent.GetInt("userid"));
 #if defined MARKER_DROPMERC
 	Marker_PlayerSpawn(player);
@@ -150,6 +156,8 @@ public void Post_PlayerSpawn(Event hEvent, const char[] Name, bool broadcast)
 
 public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 {
+	if(!RoundIsActive())
+		return;
 	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
 		return;
 	
@@ -169,6 +177,8 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 
 public void OnClientPutInServer(int client)
 {
+	if(!FF2_IsFF2Enabled())
+		return;
 #if defined MARKER_DROPMERC
 	Marker_PlayerPutInServer(client);
 #endif
@@ -176,6 +186,8 @@ public void OnClientPutInServer(int client)
 
 public void OnClientDisconnect(int client)
 {
+	if(!FF2_IsFF2Enabled())
+		return;
 #if defined MARKER_DROPMERC
 	Marker_PlayerDisconnect(client);
 #endif
@@ -183,6 +195,8 @@ public void OnClientDisconnect(int client)
 
 public void OnEntityCreated(int entity, const char[] cls)
 {
+	if(!FF2_IsFF2Enabled())
+		return;
 #if defined DEMO_NEWSHIELD
 	if(!strcmp(cls, "tf_wearable_demoshield"))
 		CreateTimer(0.1, Post_DemoShieldCreated, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
