@@ -16,6 +16,7 @@ static float NextSummonTimer[MAXCLIENTS];
 static float NextEffectsAt[MAXCLIENTS];
 TFCond LastCond[MAXCLIENTS];
 ArrayList Minions;
+bool medic_revive;
 
 public bool Necro_PrepareConfig()
 {
@@ -28,14 +29,7 @@ public bool Necro_PrepareConfig()
 	RandomDeath = CreateConVar("nm_randomdeath", "3", "Random death percentage for summon");
 	
 	Minions = new ArrayList(2);
-	
-	HookEvent("arena_win_panel", CleanUp_OnPostRoundEnd, EventHookMode_PostNoCopy);
 	return true;
-}
-
-public void CleanUp_OnPostRoundEnd(Event event, const char[] Name, bool broadcast)
-{
-	Minions.Clear();
 }
 
 public Action OnPlayerTaunt(int client, const char[] command, int arg)
@@ -56,9 +50,10 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	if(!!GetEntProp(client, Prop_Send, "m_bDucking"))
 		return Plugin_Continue;
 	
-	boss = Minions.FindValue(GetClientSerial(client), 1);
-	if(boss != -1)
+	boss = Minions.FindValue(GetClientSerial(client), 0);
+	if(boss != -1){
 		return Plugin_Continue;
+	}
 	
 	static char weapon[48];
 	int hActive = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -78,47 +73,57 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	
 	SetEntPropFloat(hActive, Prop_Send, "m_flChargeLevel", charge - (MinCharge.FloatValue / 100));
 	
-	hActive = GetRandomDead();
-	if(hActive <= 0)
+	int dead = GetRandomDead();
+	if(dead <= 0 || dead >MaxClients)
+	{
+		PrintToChat(client, "%i INVALID DEAD!", dead);
 		return Plugin_Continue;
-		
+	}
+	
+	PrintToChat(client, "dead  >: %i", dead);
 	static float pos[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 	
 	if(TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
-		FF2_SetFF2flags(hActive, FF2_GetFF2flags(hActive) | FF2FLAG_ALLOWSPAWNINBOSSTEAM);
-		TF2_ChangeClientTeam(hActive, TFTeam_Blue);
+		FF2_SetFF2flags(dead, FF2_GetFF2flags(dead) | FF2FLAG_ALLOWSPAWNINBOSSTEAM);
+		TF2_ChangeClientTeam(dead, TFTeam_Blue);
 	}
-	TF2_RespawnPlayer(hActive);
-	TF2_SetPlayerClass(hActive, TFClass_Heavy);
-	TF2_RegeneratePlayer(hActive);
-	TeleportEntity(hActive, pos, NULL_VECTOR, NULL_VECTOR);
+	medic_revive = true;
+#if defined MARKER_DROPMERC
+	RemoveMarker(dead);
+#endif
+	TF2_RespawnPlayer(dead);
+	RequestFrame(NextFrame_EnableMarkerCount);
+	TF2_SetPlayerClass(dead, TFClass_Heavy);
+	TF2_RegeneratePlayer(dead);
+	TeleportEntity(dead, pos, NULL_VECTOR, NULL_VECTOR);
 	
 	NextSummonTimer[client] = GetGameTime() + SummonPenalty.FloatValue;
-	SDKHook(hActive, SDKHook_PostThinkPost, Post_SummonPostThink);
-	ApplyBadStuff(hActive);
-	NextEffectsAt[hActive] = GetGameTime() + NextSideEffect.FloatValue;
-	CreateTimedParticle(hActive, "merasmus_spawn", pos, 1.4);
+	SDKHook(dead, SDKHook_PostThinkPost, Post_SummonPostThink);
+	ApplyBadStuff(dead);
+	NextEffectsAt[dead] = GetGameTime() + NextSideEffect.FloatValue;
+	CreateTimedParticle(dead, "merasmus_spawn", pos, 1.4);
 	
-	boss = Minions.Push(GetClientSerial(hActive));
-	Minions.Set(boss, GetClientSerial(client), 1);
+	boss = Minions.Push(GetClientSerial(client));
+	Minions.Set(boss, GetClientSerial(dead), 1);
 	
 	return Plugin_Continue;
 }
 
+public void Medic_PlayerDeath(int client)
+{
+	int index = Minions.FindValue(GetClientSerial(client), 1);
+	if(index != -1){
+		PrintToChatAll("index : %i, vicitim : %N, owner: %N", index, GetClientFromSerial(Minions.Get(index, 1)), GetClientFromSerial(Minions.Get(index, 0)));
+		Minions.Erase(index);
+	}
+	EndHook(client);
+}
+
 public void Post_SummonPostThink(int client)
 {
-	if(!RoundIsActive())
-	{
-		EndHook(client);
-		return;
-	}
-	else if(!IsPlayerAlive(client))
-	{
-		int index = Minions.FindValue(GetClientSerial(client), 0);
-		if(index != -1)
-			Minions.Erase(index);
+	if(!RoundIsActive()) {
 		EndHook(client);
 		return;
 	}
@@ -173,5 +178,10 @@ static stock int GetRandomDead()
 		if(FF2_GetBossIndex(x) == -1)
 			Clients[total++] = x;
 	}
-	return Clients[GetRandomInt(0, total - 1)];
+	return !total ? -1:Clients[GetRandomInt(0, total - 1)];
+}
+
+public void NextFrame_EnableMarkerCount()
+{
+	medic_revive = false;
 }
