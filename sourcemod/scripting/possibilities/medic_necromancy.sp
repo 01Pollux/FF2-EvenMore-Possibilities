@@ -74,13 +74,9 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	SetEntPropFloat(hActive, Prop_Send, "m_flChargeLevel", charge - (MinCharge.FloatValue / 100));
 	
 	int dead = GetRandomDead();
-	if(dead <= 0 || dead >MaxClients)
-	{
-		PrintToChat(client, "%i INVALID DEAD!", dead);
+	if(dead <= 0 || dead > MaxClients) //ik its not even possible, but whatever.
 		return Plugin_Continue;
-	}
 	
-	PrintToChat(client, "dead  >: %i", dead);
 	static float pos[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 	
