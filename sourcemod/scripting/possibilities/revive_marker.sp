@@ -91,12 +91,8 @@ void RemoveMarker(int client)
 	int marker = EntRefToEntIndex(iMarker[client]);
 	if(IsValidEntity(marker))
 	{
-		iMarker[client] = INVALID_ENT_REFERENCE;
-		float pos[3];
-		GetEntPropVector(marker, Prop_Send, "m_vecOrigin", pos);
-		pos[2] += 30.0;
-		CreateTimedParticle(marker, "ghost_smoke", pos, 0.5);
 		RemoveEntity(marker);
+		iMarker[client] = INVALID_ENT_REFERENCE;
 	}
 }
 
