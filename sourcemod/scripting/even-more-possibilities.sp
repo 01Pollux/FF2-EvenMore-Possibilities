@@ -25,7 +25,7 @@ public Plugin myinfo =
 {
 	name			= "[FF2] Even More Possibilities",
 	author		= "[01]Pollux.",
-	version		= "1.0",
+	version		= "1.1",
 	url 			= "go-away.net"
 };
 
