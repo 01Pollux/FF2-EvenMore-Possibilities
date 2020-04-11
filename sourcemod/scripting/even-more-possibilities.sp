@@ -41,6 +41,7 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
 	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
+	RequestFrame(NextFrame_EnableArrayList);	//???
 }
 
 static void StartConfig()
@@ -265,7 +266,13 @@ stock int CreateReviveMarkerFrom(int Marker, int client)
 
 public void NextFrame_EnableArrayList()
 {
+#if defined DEMO_NEWSHIELD
+	iShield = new ArrayList(2);
+#endif
+
+#if defined MEDIC_NECROMANCY
 	Minions = new ArrayList(2);
+#endif
 }
 
 
