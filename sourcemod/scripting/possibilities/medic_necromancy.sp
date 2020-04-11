@@ -28,7 +28,6 @@ public bool Necro_PrepareConfig()
 	NextSideEffect = CreateConVar("nm_sideeffects_delay", "0.9", "Delay between Bad/Random effects");
 	RandomDeath = CreateConVar("nm_randomdeath", "3", "Random death percentage for summon");
 	
-	RequestFrame(NextFrame_EnableArrayList);	//???
 	return true;
 }
 
