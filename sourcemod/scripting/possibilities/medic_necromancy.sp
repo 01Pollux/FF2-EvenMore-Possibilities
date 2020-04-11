@@ -28,7 +28,7 @@ public bool Necro_PrepareConfig()
 	NextSideEffect = CreateConVar("nm_sideeffects_delay", "0.9", "Delay between Bad/Random effects");
 	RandomDeath = CreateConVar("nm_randomdeath", "3", "Random death percentage for summon");
 	
-	Minions = new ArrayList(2);
+	RequestFrame(NextFrame_EnableArrayList);	//???
 	return true;
 }
 
@@ -110,7 +110,7 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 public void Medic_PlayerDeath(int client)
 {
 	int index = Minions.FindValue(GetClientSerial(client), 1);
-	if(index != -1){
+	if(index != -1) {
 		Minions.Erase(index);
 	}
 	EndHook(client);
