@@ -263,5 +263,10 @@ stock int CreateReviveMarkerFrom(int Marker, int client)
 }
 #endif
 
+public void NextFrame_EnableArrayList()
+{
+	Minions = new ArrayList(2);
+}
+
 
 #file "[FF2] Even More Possibilities"
