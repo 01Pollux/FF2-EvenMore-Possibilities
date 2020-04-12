@@ -48,8 +48,10 @@ public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
 	if(IsValidEntity(shield))
 	{
 		int owner = GethOwnerEntityOfEntity(shield);
-		RegShield(owner, shield);
-		SDKHook(owner, SDKHook_PostThinkPost, Post_DemoThinkPost);
+		if(owner > 0 && owner <= MaxClients) {
+			RegShield(owner, shield);
+			SDKHook(owner, SDKHook_PostThinkPost, Post_DemoThinkPost);
+		}
 	}
 }
 
@@ -66,7 +68,6 @@ public void Post_DemoThinkPost(int client)
 	
 	if(FF2_GetClientShield(client) != 0.0)
 		return;
-	
 	
 	CreateTimer(RegenDuration.FloatValue, Timer_SetShieldBack, GetClientSerial(client), TIMER_FLAG_NO_MAPCHANGE);
 	UnHook(client);
