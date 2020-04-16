@@ -28,6 +28,9 @@ public bool Necro_PrepareConfig()
 	NextSideEffect = CreateConVar("nm_sideeffects_delay", "0.9", "Delay between Bad/Random effects");
 	RandomDeath = CreateConVar("nm_randomdeath", "3", "Random death percentage for summon");
 	
+	if(Minions==null) {
+		Minions = new ArrayList(2);
+	}
 	return true;
 }
 
@@ -83,6 +86,8 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	{
 		FF2_SetFF2flags(dead, FF2_GetFF2flags(dead) | FF2FLAG_ALLOWSPAWNINBOSSTEAM);
 		TF2_ChangeClientTeam(dead, TFTeam_Blue);
+	} else {
+		TF2_ChangeClientTeam(dead, TFTeam_Red);
 	}
 	medic_revive = true;
 #if defined MARKER_DROPMERC
@@ -91,6 +96,7 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	TF2_RespawnPlayer(dead);
 	RequestFrame(NextFrame_EnableMarkerCount);
 	TF2_SetPlayerClass(dead, TFClass_Heavy);
+	FF2_SetFF2flags(dead, FF2_GetFF2flags(dead) | FF2FLAG_ALLOWSPAWNINBOSSTEAM);
 	TF2_RegeneratePlayer(dead);
 	TeleportEntity(dead, pos, NULL_VECTOR, NULL_VECTOR);
 	
@@ -98,7 +104,7 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 	SDKHook(dead, SDKHook_PostThinkPost, Post_SummonPostThink);
 	ApplyBadStuff(dead);
 	NextEffectsAt[dead] = GetGameTime() + NextSideEffect.FloatValue;
-	CreateTimedParticle(dead, "merasmus_spawn", pos, 1.4);
+	CreateParticle(client, "merasmus_spawn");
 	
 	boss = Minions.Push(GetClientSerial(client));
 	Minions.Set(boss, GetClientSerial(dead), 1);
@@ -108,10 +114,23 @@ public Action OnPlayerTaunt(int client, const char[] command, int arg)
 
 public void Medic_PlayerDeath(int client)
 {
-	int index = Minions.FindValue(GetClientSerial(client), 1);
-	if(index != -1) {
-		Minions.Erase(index);
-	}
+	if(Minions != null){
+		int index = Minions.FindValue(GetClientSerial(client), 1);
+		if(index != -1) {
+			Minions.Erase(index);
+		}
+	} else { LogError("Invalid ArrayList Handle for \"medic_necromancy.sp\""); }
+	EndHook(client);
+}
+
+public void Medic_PlayerDisconnect(int client)
+{
+	if(Minions != null){
+		int index = Minions.FindValue(GetClientSerial(client), 1);
+		if(index != -1) {
+			Minions.Erase(index);
+		}
+	} else { LogError("Invalid ArrayList Handle for \"medic_necromancy.sp\""); }
 	EndHook(client);
 }
 
