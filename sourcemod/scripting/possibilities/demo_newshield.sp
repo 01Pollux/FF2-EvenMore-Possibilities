@@ -28,6 +28,9 @@ public bool NewShield_PrepareConfig(const GameData Config)
 	if(m_iEntityLevel == -1 || m_iEntityQuality == -1)
 		return false;
 	
+	if(iShield == null) {
+		iShield = new ArrayList(2);
+	}
 	if(LateLoaded)
 	{
 		int x = -1;
