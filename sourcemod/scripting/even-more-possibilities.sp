@@ -41,7 +41,6 @@ public void OnPluginStart()
 	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
 	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
-	RequestFrame(NextFrame_EnableArrayList);	//???
 }
 
 static void StartConfig()
@@ -114,11 +113,13 @@ static void StartConfig()
 public void OnMapStart()
 {
 #if defined MEDIC_NECROMANCY
-	delete Minions;
+	if(Minions ==  null)
+		PrintToServer("invalid");
+	Minions.Clear();
 #endif
 
 #if defined DEMO_NEWSHIELD
-	delete iShield;
+	iShield.Clear();
 #endif
 }
 
@@ -192,6 +193,9 @@ public void OnClientDisconnect(int client)
 #if defined MARKER_DROPMERC
 	Marker_PlayerDisconnect(client);
 #endif
+#if defined MEDIC_NECROMANCY
+	Medic_PlayerDisconnect(client);
+#endif
 }
 
 public void OnEntityCreated(int entity, const char[] cls)
@@ -204,41 +208,23 @@ public void OnEntityCreated(int entity, const char[] cls)
 #endif
 }
 
-stock void CreateTimedParticle(int owner, const char[] Name, float SpawnPos[3], float duration)
+stock void CreateParticle(int client, const char[] name)
 {
-	CreateTimer(duration, Timer_KillEntity, EntIndexToEntRef(AttachParticle(owner, Name, SpawnPos)), TIMER_FLAG_NO_MAPCHANGE);
-}
-
-public Action Timer_KillEntity(Handle timer, any EntRef)
-{
-	int entity = EntRefToEntIndex(EntRef);
-	if(IsValidEntity(entity))
-		RemoveEntity(entity);
-}
-
-stock int AttachParticle(int owner, const char[] ParticleName, float SpawnPos[3])
-{
-	int entity = CreateEntityByName("info_particle_system");
-
-	TeleportEntity(entity, SpawnPos, NULL_VECTOR, NULL_VECTOR);
-
-	static char buffer[64];
-	FormatEx(buffer, sizeof(buffer), "target%i", owner);
-	DispatchKeyValue(owner, "targetname", buffer);
-
-	DispatchKeyValue(entity, "targetname", "tf2particle");
-	DispatchKeyValue(entity, "parentname", buffer);
-	DispatchKeyValue(entity, "effect_name", ParticleName);
-	DispatchSpawn(entity);
+	int table = FindStringTable("ParticleEffectNames");
+	int particle = FindStringIndex(table, name);
 	
-	SetVariantString(buffer);
-	AcceptEntityInput(entity, "SetParent", entity, entity);
+	float pos[3]; GetClientAbsOrigin(client, pos);
+	float ang[3]; GetClientEyeAngles(client, ang);
 	
-	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", owner);
-	ActivateEntity(entity);
-	AcceptEntityInput(entity, "start");
-	
-	return entity; 
+	TE_Start("TFParticleEffect");
+	TE_WriteFloat("m_vecOrigin[0]", pos[0]);
+	TE_WriteFloat("m_vecOrigin[1]", pos[1]);
+	TE_WriteFloat("m_vecOrigin[2]", pos[2]);
+	TE_WriteVector("m_vecAngles", ang);
+	TE_WriteNum("m_iParticleSystemIndex", particle);
+	TE_WriteNum("entindex", -1);
+	TE_WriteNum("m_iAttachType", 5);
+	TE_SendToAll();
 }
 
 stock bool RoundIsActive()
@@ -263,17 +249,5 @@ stock int CreateReviveMarkerFrom(int Marker, int client)
 	return SDKCall(SDKCreateReviveMarker, Marker, client);
 }
 #endif
-
-public void NextFrame_EnableArrayList()
-{
-#if defined DEMO_NEWSHIELD
-	iShield = new ArrayList(2);
-#endif
-
-#if defined MEDIC_NECROMANCY
-	Minions = new ArrayList(2);
-#endif
-}
-
 
 #file "[FF2] Even More Possibilities"
