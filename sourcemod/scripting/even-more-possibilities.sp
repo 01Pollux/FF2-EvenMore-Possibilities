@@ -113,8 +113,6 @@ static void StartConfig()
 public void OnMapStart()
 {
 #if defined MEDIC_NECROMANCY
-	if(Minions ==  null)
-		PrintToServer("invalid");
 	Minions.Clear();
 #endif
 
