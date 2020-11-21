@@ -81,7 +81,7 @@
 		}
 		"Addresses"
 		{
-			"CTFScattergun::FireBullet::AnyScatterFaN"
+			"CTFScattergun::FireBullet [allow all scatterguns]"
 			{
 				"signature"		"CTFScattergun::FireBullet"
 				"linux"
@@ -93,19 +93,19 @@
 					"offset"		"26"
 				}
 			}
-			"CTFScattergun::FireBullet::NoPushPenalty"
+			"CTFScattergun::FireBullet [set push]"
 			{
 				"signature"		"CTFScattergun::FireBullet"
 				"linux"
 				{
-					"offset"		"125"
+					"offset"		"131"
 				}
 				"windows"
 				{
-					"offset"		"132"
+					"offset"		"138"
 				}
 			}
-			"CTFPlayer::RegenThink::CanRegen"
+			"CTFPlayer::RegenThink [is player medic]"
 			{
 				"signature"		"CTFPlayer::RegenThink"
 				"linux"

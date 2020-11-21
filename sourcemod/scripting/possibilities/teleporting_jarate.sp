@@ -3,8 +3,11 @@
 #endif
 #define TELEPORTING_JARATE
 
-static ConVar g_AllowScout;
-static ConVar g_AllowPyro;
+enum struct _TJConVars {
+	ConVar allow_scout;
+	ConVar allow_pyro;
+}
+static _TJConVars tj_convars;
 
 public bool Teleport_PrepareConfig(const GameData Config)
 {
@@ -14,8 +17,8 @@ public bool Teleport_PrepareConfig(const GameData Config)
 	else if(!DHookEnableDetour(JarExplode, false, Pre_JarExplode))
 		return false;
 	
-	g_AllowScout = CreateConVar("tj_allowscout", "0", "Allow Scouts to use Madmilk to teleport");
-	g_AllowPyro = CreateConVar("tj_allowpyro", "0", "Allow Pyros to use Gas Tank to teleport");
+	tj_convars.allow_scout 	= CreateConVar("tj_allowscout", "0", "Allow Scouts to use Madmilk to teleport");
+	tj_convars.allow_pyro	= CreateConVar("tj_allowpyro", "0", "Allow Pyros to use Gas Tank to teleport");
 	return true;
 }
 
@@ -26,13 +29,14 @@ public MRESReturn Pre_JarExplode(Handle Params)
 	if(!IsPlayerAlive(owner))
 		return MRES_Ignored;
 	
-	if(FF2_GetBossIndex(owner) > -1)
+	FF2Player player = FF2Player(owner);
+	if(player.bIsBoss)
 		return MRES_Ignored;
 	
-	if(TF2_GetPlayerClass(owner) == TFClass_Scout && !g_AllowScout.BoolValue)
+	if(TF2_GetPlayerClass(owner) == TFClass_Scout && !tj_convars.allow_scout.BoolValue)
 		return MRES_Ignored;
 	
-	else if(TF2_GetPlayerClass(owner) == TFClass_Pyro && !g_AllowPyro.BoolValue)
+	else if(TF2_GetPlayerClass(owner) == TFClass_Pyro && !tj_convars.allow_pyro.BoolValue)
 		return MRES_Ignored;
 	
 	static float Pos[3], EndPos[3];
@@ -44,7 +48,7 @@ public MRESReturn Pre_JarExplode(Handle Params)
 	return MRES_Ignored;
 }
 
-bool IsValidPointToTeleport(int client, const float Position[3], float EndPosition[3])
+static bool IsValidPointToTeleport(int client, const float Position[3], float EndPosition[3])
 {
 	static float vecMaxs[3], vecMins[3];
 	
@@ -125,10 +129,7 @@ bool IsValidPointToTeleport(int client, const float Position[3], float EndPositi
 
 public bool Trace_CheckIfStuck(int entity, int content, any client)
 {
-	if(!entity)
-		return false;
-	
-	if(entity > MaxClients)
+	if(entity <= 0 || entity > MaxClients)
 		return true;
 	
 	if(GetClientTeam(client) == GetClientTeam(entity))

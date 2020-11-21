@@ -1,6 +1,4 @@
-#pragma semicolon 1
 
-#include <sourcemod>
 #undef REQUIRE_PLUGIN
 #tryinclude <dhooks>
 #define REQUIRE_PLUGIN
@@ -8,18 +6,20 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 
+#pragma semicolon 1
 #pragma newdecls required
 
-bool LateLoaded;
 
 #undef REQUIRE_PLUGIN
-#tryinclude "possibilities/infinite_fan_push.sp"
+#tryinclude "possibilities/infinite_scatterpush.sp"
 #tryinclude "possibilities/medic_necromancy.sp"
 #tryinclude "possibilities/demo_newshield.sp"
 #tryinclude "possibilities/revive_marker.sp"
 #tryinclude "possibilities/classes_regen.sp"
 #tryinclude "possibilities/teleporting_jarate.sp"
 #define REQUIRE_PLUGIN
+
+FF2GameMode ff2_gm;
 
 public Plugin myinfo = 
 {
@@ -29,18 +29,39 @@ public Plugin myinfo =
 	url 			= "go-away.net"
 };
 
-public APLRes AskPluginLoad2(Handle Plugin, bool late, char[] err, int err_max)
-{
-	LateLoaded = late;
-}
-
 public void OnPluginStart()
 {
 	StartConfig();
-	HookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
-	HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
-	HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
-	HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
+}
+
+public void OnLibraryAdded(const char[] lib_name)
+{
+	if(!strcmp(lib_name, "VSH2"))
+	{
+#if defined DEMO_NEWSHIELD
+		VSH2_Hook(OnBossDealDamage_OnHitShield, _OnHitShield);
+#endif
+		HookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
+		HookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
+		HookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
+		HookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
+		HookEvent("player_changeclass", Post_PlayerChangeClass);
+	}
+}
+
+public void OnLibraryRemoved(const char[] lib_name)
+{
+	if(!strcmp(lib_name, "VSH2"))
+	{
+#if defined DEMO_NEWSHIELD
+		VSH2_Unhook(OnBossDealDamage_OnHitShield, _OnHitShield);
+#endif
+		UnhookEvent("player_death", Pre_PlayerDeath, EventHookMode_Pre);
+		UnhookEvent("player_spawn", Post_PlayerSpawn, EventHookMode_Post);
+		UnhookEvent("arena_round_start", Post_RoundStart, EventHookMode_PostNoCopy);
+		UnhookEvent("arena_win_panel", Post_RoundEnd, EventHookMode_PostNoCopy);
+		UnhookEvent("player_changeclass", Post_PlayerChangeClass);
+	}
 }
 
 static void StartConfig()
@@ -57,7 +78,7 @@ static void StartConfig()
 	if(!FaN_PrepareConfig(Config))
 	{
 		delete Config;
-		SetFailState("[GameData] Failed to Load \"infinite_fan_push.sp\"");
+		SetFailState("[GameData] Failed to Load \"infinite_scatterpush.sp\"");
 		return;
 	}
 #endif
@@ -115,16 +136,13 @@ public void OnMapStart()
 #if defined MEDIC_NECROMANCY
 	Minions.Clear();
 #endif
-
-#if defined DEMO_NEWSHIELD
-	iShield.Clear();
-#endif
 }
 
 public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
 {
 	if(!RoundIsActive())
 		return;
+	
 #if defined MARKER_DROPMERC
 	for (int x = 1; x <= MaxClients; x++)
 	{
@@ -137,10 +155,20 @@ public void Post_RoundStart(Event hEvent, const char[] Name, bool broadcast)
 
 public void Post_RoundEnd(Event event, const char[] Name, bool broadcast)
 {
-	if(!RoundIsActive())
-		return;
 #if defined MEDIC_NECROMANCY
 	Minions.Clear();
+#endif
+}
+
+public void Post_PlayerChangeClass(Event hEvent, const char[] Name, bool broadcast)
+{
+	if(!RoundIsActive())
+		return;
+	
+	FF2Player player = FF2Player(hEvent.GetInt("userid"), true);
+	
+#if defined DEMO_NEWSHIELD
+	Shield_UnhookClient(player);
 #endif
 }
 
@@ -148,9 +176,11 @@ public void Post_PlayerSpawn(Event hEvent, const char[] Name, bool broadcast)
 {
 	if(!RoundIsActive())
 		return;
-	int player = GetClientOfUserId(hEvent.GetInt("userid"));
+	
+	int client = GetClientOfUserId(hEvent.GetInt("userid"));
+	
 #if defined MARKER_DROPMERC
-	Marker_PlayerSpawn(player);
+	Marker_PlayerSpawn(client);
 #endif
 }
 
@@ -158,12 +188,13 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 {
 	if(!RoundIsActive())
 		return;
+	
 	if(hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER)
 		return;
 	
-	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
+	FF2Player victim = FF2Player(hEvent.GetInt("userid"), true);
 #if defined DEMO_NEWSHIELD
-	Shield_PlayerDeath(victim);
+	Shield_UnhookClient(victim);
 #endif
 
 #if defined MARKER_DROPMERC
@@ -175,19 +206,29 @@ public void Pre_PlayerDeath(Event hEvent, const char[] Name, bool broadcast)
 #endif
 }
 
-public void OnClientPutInServer(int client)
+public void _NextFrame_SetPlayerInfo(int client)
 {
-	if(!FF2_IsFF2Enabled())
-		return;
-#if defined MARKER_DROPMERC
+	#if defined MARKER_DROPMERC
 	Marker_PlayerPutInServer(client);
 #endif
+#if defined DEMO_NEWSHIELD
+	Shield_UnhookClient(FF2Player(client));
+#endif
+}
+
+public void OnClientPutInServer(int client)
+{
+	if(!ff2_gm.FF2IsOn)
+		return;
+	
+	RequestFrame(_NextFrame_SetPlayerInfo, client);
 }
 
 public void OnClientDisconnect(int client)
 {
-	if(!FF2_IsFF2Enabled())
+	if(!ff2_gm.FF2IsOn)
 		return;
+	
 #if defined MARKER_DROPMERC
 	Marker_PlayerDisconnect(client);
 #endif
@@ -196,15 +237,6 @@ public void OnClientDisconnect(int client)
 #endif
 }
 
-public void OnEntityCreated(int entity, const char[] cls)
-{
-	if(!FF2_IsFF2Enabled())
-		return;
-#if defined DEMO_NEWSHIELD
-	if(!strcmp(cls, "tf_wearable_demoshield"))
-		CreateTimer(0.1, Post_DemoShieldCreated, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
-#endif
-}
 
 stock void CreateParticle(int client, const char[] name)
 {
@@ -227,15 +259,14 @@ stock void CreateParticle(int client, const char[] name)
 
 stock bool RoundIsActive()
 {
-	if(!FF2_IsFF2Enabled())
-		return false;
-	return (FF2_GetRoundState() == 1);
+	return (ff2_gm.FF2IsOn && ff2_gm.RoundState == StateRunning);
 }
 
 stock int GethOwnerEntityOfEntity(int entity)
 {
 	return GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 }
+
 stock int GetItemDefinitionIndex(int iItem)
 {
 	return GetEntProp(iItem, Prop_Send, "m_iItemDefinitionIndex");

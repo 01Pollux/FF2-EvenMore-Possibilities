@@ -8,9 +8,38 @@
 #endif
 
 Handle SDKEquipWearable;
-static ConVar RegenDuration;
-ArrayList iShield;
+
+enum struct _DNSConVars {
+	ConVar damage_ratio;
+	ConVar next_think_time;
+	ConVar regen_per_think;
+}
+_DNSConVars dns_cvars;
+
 static int m_iEntityQuality, m_iEntityLevel;
+
+#define ToDemoShieldUser(%0) view_as<DemoShieldUser>(%0)
+methodmap DemoShieldUser < FF2Player {
+	public DemoShieldUser(int idx, bool uid = false) {
+		return view_as<DemoShieldUser>(FF2Player(idx, uid));
+	}
+	
+	property bool bBrokenShield {
+		public get() 				{ return this.GetPropAny("bBrokenShield"); }
+		public set(const bool b) 	{ this.SetPropAny("bBrokenShield", b); }
+	}
+	
+	property float flShieldHP {
+		public get() 				{ return this.GetPropFloat("flShieldHP"); }
+		public set(const float f) 	{ this.SetPropFloat("flShieldHP", f); }
+	}
+	
+	property int iShieldDefIdx {
+		public get() 				{ return this.GetPropInt("iShieldDefIdx"); }
+		public set(const int idx) 	{ this.SetPropInt("iShieldDefIdx", idx); }
+	}
+}
+
 
 public bool NewShield_PrepareConfig(const GameData Config)
 {
@@ -20,81 +49,110 @@ public bool NewShield_PrepareConfig(const GameData Config)
 	if((SDKEquipWearable = EndPrepSDKCall()) == null)
 		return false;
 	
-	RegenDuration = CreateConVar("dns_duration", "20.0", "Duration before demo gets a new shield");
+	dns_cvars.damage_ratio = CreateConVar("dns_damage_ratio", "0.5", "Damage's ratio for shield");
+	dns_cvars.next_think_time = CreateConVar("dns_next_thin_time", "1.0", "Next think duration for shield regen");
+	dns_cvars.regen_per_think = CreateConVar("dns_regen_per_think", "10.0", "amount of health to add each think");
 	
+	RegConsoleCmd("ff2_shieldhp", Cmd_ShowShieldHP, "Show Shield HP");
+
 	m_iEntityQuality = FindSendPropInfo("CTFWearableDemoShield", "m_iEntityQuality");
 	m_iEntityLevel = FindSendPropInfo("CTFWearableDemoShield", "m_iEntityLevel");
 	
-	if(m_iEntityLevel == -1 || m_iEntityQuality == -1)
-		return false;
-	
-	if(iShield == null) {
-		iShield = new ArrayList(2);
-	}
-	if(LateLoaded)
-	{
-		int x = -1;
-		while((x = FindEntityByClassname(x, "tf_wearable_demoshield")) != -1)
-			Post_DemoShieldCreated(null, EntIndexToEntRef(x));
-	}
 	return true;
 }
 
-public void Shield_PlayerDeath(int player)
+public Action Cmd_ShowShieldHP(int client, int args)
 {
-	SDKUnhook(player, SDKHook_PostThinkPost, Post_DemoThinkPost);
-}
-
-public Action Post_DemoShieldCreated(Handle Timer, int EntRef)
-{
-	int shield = EntRefToEntIndex(EntRef);
-	if(IsValidEntity(shield))
+	if(!IsClientInGame(client)) 
+		return Plugin_Continue;
+	else if(!IsPlayerAlive(client))
 	{
-		int owner = GethOwnerEntityOfEntity(shield);
-		if(owner > 0 && owner <= MaxClients) {
-			RegShield(owner, shield);
-			SDKHook(owner, SDKHook_PostThinkPost, Post_DemoThinkPost);
-		}
-	}
-}
-
-public void Post_DemoThinkPost(int client)
-{
-	if(!RoundIsActive())
-		return;
-	
-	if(TF2_GetPlayerClass(client) != TFClass_DemoMan || FF2_GetBossIndex(client) > -1)
-	{
-		UnHook(client);
-		return;
+		ReplyToCommand(client, "[FF2] You must be alive to use this command");
+		return Plugin_Handled;
 	}
 	
-	if(FF2_GetClientShield(client) != 0.0)
-		return;
-	
-	CreateTimer(RegenDuration.FloatValue, Timer_SetShieldBack, GetClientSerial(client), TIMER_FLAG_NO_MAPCHANGE);
-	UnHook(client);
-	return;
-}
-
-public Action Timer_SetShieldBack(Handle Timer, any Serial)
-{
-	int client = GetClientFromSerial(Serial);
-	if(!IsPlayerAlive(client))
+	DemoShieldUser player = DemoShieldUser(client);
+	if(player.bIsBoss)
 		return Plugin_Continue;
 	
-	if(TF2_GetPlayerClass(client) != TFClass_DemoMan || !RoundIsActive() || FF2_GetBossIndex(client) > -1)
-		return Plugin_Continue;
+	float health = player.flShieldHP;
 	
-	int index = GetiDefShieldIndex(Serial);
-	CreateAndEquipShield(client, index);
-	
+	PrintHintText(client, "Shield Health: %i/100", health);
 	return Plugin_Continue;
 }
 
-stock void CreateAndEquipShield(int client, int index)
+
+public Action _OnHitShield(VSH2Player victim, int& attacker, int& inflictor, 
+							float& damage, int& damagetype, int& weapon, 
+							float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if(victim.GetPropAny("bIsBoss"))
+		return Plugin_Continue;
+	
+	int client = victim.index;
+	
+	DemoShieldUser player = ToDemoShieldUser(victim);
+	
+	float curHealth = player.flShieldHP;
+	curHealth -= damage * dns_cvars.damage_ratio.FloatValue;
+	
+	if(curHealth <= 0.0)
+	{
+		curHealth = 0.0;
+		
+		if(!player.bBrokenShield)
+		{
+			player.iShieldDefIdx = GetItemDefinitionIndex(weapon);
+			player.bBrokenShield = true;
+			SDKHook(client, SDKHook_PostThinkPost, _PostShieldOwnerThinkPost);
+		}
+	}
+	
+	player.flShieldHP = curHealth;
+	return player.bBrokenShield ? Plugin_Continue:Plugin_Changed;
+}
+
+
+public void _PostShieldOwnerThinkPost(int client)
+{
+	DemoShieldUser player = DemoShieldUser(client);
+	if(!RoundIsActive())
+	{
+		UnHook(player);
+		return;
+	}
+	
+	if(player.bIsBoss)
+	{
+		UnHook(player);
+		return;
+	}
+	
+	static float flNextRegen[MAXCLIENTS];
+	if(flNextRegen[client] <= GetGameTime())
+	{
+		flNextRegen[client] = GetGameTime() + dns_cvars.next_think_time.FloatValue;
+		player.flShieldHP += dns_cvars.regen_per_think.FloatValue;
+	}
+	
+	if(player.flShieldHP >= 100.0)
+	{
+		UnHook(player);
+		ResetShield(player);
+	}
+}
+
+
+void Shield_UnhookClient(FF2Player player)
+{
+	UnHook(ToDemoShieldUser(player));
+}
+
+
+static void ResetShield(DemoShieldUser player)
 {
 	int shield = CreateEntityByName("tf_wearable_demoshield");
+	int index = player.iShieldDefIdx;
 	
 	SetEntProp(shield, Prop_Send, "m_iItemDefinitionIndex", index);
 	
@@ -106,35 +164,13 @@ stock void CreateAndEquipShield(int client, int index)
 	SetEntProp(shield, Prop_Send, "m_iEntityLevel", 39);
 	
 	DispatchSpawn(shield);
-	SDKCall(SDKEquipWearable, client, shield);
-	
-	FF2_SetClientShield(client, shield, 100.0);
+	SDKCall(SDKEquipWearable, player.index, shield);
 }
 
-void UnHook(int client)
-{
-	SDKUnhook(client, SDKHook_PostThinkPost, Post_DemoThinkPost);
-}
 
-void RegShield(int owner, int shield)
+static void UnHook(DemoShieldUser player)
 {
-	int index = iShield.FindValue(GetClientSerial(owner));
-	switch(index)
-	{
-		case -1:{
-			index = iShield.Push(GetClientSerial(owner));
-			iShield.Set(index, GetItemDefinitionIndex(shield), 1);
-		}
-		default:{
-			iShield.Set(index, GetItemDefinitionIndex(shield), 1);
-		}
-	}
-}
-
-int GetiDefShieldIndex(int Serial)
-{
-	int index = iShield.FindValue(Serial);
-	if(index == -1)
-		return 131;
-	return iShield.Get(index, 1);
+	player.flShieldHP = 100.0;
+	player.bBrokenShield = false;
+	SDKUnhook(player.index, SDKHook_PostThinkPost, _PostShieldOwnerThinkPost);
 }

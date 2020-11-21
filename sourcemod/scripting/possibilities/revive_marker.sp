@@ -11,9 +11,12 @@ Handle SDKCreateReviveMarker;
 int Revives[MAXCLIENTS];
 int iMarker[MAXCLIENTS] =  { INVALID_ENT_REFERENCE, ... };
 
-ConVar iMaxRevives;
-static ConVar flDecayTime;
-static ConVar flHeavyExtra;
+enum struct _RMConVars {
+	ConVar max_revives;
+	ConVar decay_time;
+	ConVar heavy_extra;
+}
+_RMConVars rm_cvars;
 
 public bool Marker_PrepareConfig(const GameData Config)
 {
@@ -24,9 +27,9 @@ public bool Marker_PrepareConfig(const GameData Config)
 	if((SDKCreateReviveMarker = EndPrepSDKCall()) == null)
 		return false;
 	
-	iMaxRevives = CreateConVar("rm_max_revives", "1", "Max revives a client can have");
-	flDecayTime = CreateConVar("rm_max_decay", "10.0", "Decay time for revive marker");
-	flHeavyExtra = CreateConVar("rm_max_decay_mult", "1.4", "Optional, Heavy's extra time for decay");
+	rm_cvars.max_revives = CreateConVar("rm_max_revives", "1", "Max revives a client can have");
+	rm_cvars.decay_time = CreateConVar("rm_max_decay", "10.0", "Decay time for revive marker");
+	rm_cvars.heavy_extra = CreateConVar("rm_max_decay_mult", "1.4", "Optional, Heavy's extra time for decay");
 	
 	return true;
 }
@@ -44,17 +47,19 @@ public void Marker_PlayerSpawn(int player)
 	RemoveMarker(player);
 }
 
-public void Marker_PlayerDeath(int victim)
+public void Marker_PlayerDeath(FF2Player player)
 {
 	if(!RoundIsActive())
-	return;
-	
-	if(Revives[victim] >= iMaxRevives.IntValue)
 		return;
 	
-	if(FF2_GetBossIndex(victim) > -1)
+	int victim = player.index;
+	
+	if(player.bIsBoss)
 		return;
-		
+	
+	if(Revives[victim] >= rm_cvars.max_revives.IntValue)
+		return;
+	
 	int marker = CreateEntityByName("entity_revive_marker");
 	if(!IsValidEntity(marker))	
 		return;
@@ -98,5 +103,5 @@ void RemoveMarker(int client)
 
 float GetMaxDecay(TFClassType Class)
 {
-	return (Class == TFClass_Heavy ? flDecayTime.FloatValue * flHeavyExtra.FloatValue:flDecayTime.FloatValue);
+	return (Class == TFClass_Heavy ? rm_cvars.decay_time.FloatValue * rm_cvars.heavy_extra.FloatValue:rm_cvars.decay_time.FloatValue);
 }

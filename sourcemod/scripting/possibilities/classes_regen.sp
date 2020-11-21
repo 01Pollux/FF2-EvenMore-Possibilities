@@ -3,8 +3,8 @@
 #endif
 #define CLASSES_REGEN
 
-static Address g_aRegenThink = Address_Null;
-static int OLD_Address[6];
+static int nOldBytes[6];
+static Address pRegenThink;
 
 static ConVar cv_AllowedClasses;
 static char g_sClasses[78];
@@ -33,13 +33,12 @@ public bool Regen_PrepareConfig(const GameData Config)
 	else if(!DHookEnableDetour(OnRegenThink, true, Post_RegenThink))
 		return false;
 	
-	g_aRegenThink = Config.GetAddress("CTFPlayer::RegenThink::CanRegen");
-	if(g_aRegenThink == Address_Null)
+	if((pRegenThink = Config.GetAddress("CTFPlayer::RegenThink [is player medic]")) == Address_Null)
 		return false;
 	
-	for (int x; x < 6; x++)
-		OLD_Address[x] = LoadFromAddress(g_aRegenThink + view_as<Address>(x), NumberType_Int8);
-		
+	for(int i; i < 6; i++)
+		nOldBytes[i] = LoadFromAddress(pRegenThink + view_as<Address>(i), NumberType_Int8);
+	
 	cv_AllowedClasses = CreateConVar("rt_classes", "sniper ; heavy ; spy ; engineer", "Allow Those classes to get regenerated over time");
 	cv_AllowedClasses.GetString(g_sClasses, sizeof(g_sClasses));
 	
@@ -47,6 +46,7 @@ public bool Regen_PrepareConfig(const GameData Config)
 	
 	return true;
 }
+
 public void OnClassesChange(ConVar cConVar, const char[] oldVal, const char[] newVal)
 {
 	cv_AllowedClasses.GetString(g_sClasses, sizeof(g_sClasses));
@@ -55,19 +55,24 @@ public void OnClassesChange(ConVar cConVar, const char[] oldVal, const char[] ne
 static bool bCanRegen = false;
 public MRESReturn Pre_RegenThink(int player)
 {
-	if(!RoundIsActive())
+	if(!RoundIsActive()) {
 		return MRES_Ignored;
-		
-	if(FF2_GetBossIndex(player) > -1)
+	}
+	
+	FF2Player ff2player = FF2Player(player);
+	if(ff2player.bIsBoss) {
 		return MRES_Ignored;
+	}
 	
 	bCanRegen = false;
 	
-	if(StrContains(g_sClasses, TF2_ClassName[view_as<int>(TF2_GetPlayerClass(player))])  == -1)
+	if(StrContains(g_sClasses, TF2_ClassName[view_as<int>(TF2_GetPlayerClass(player))])  == -1) {
 		return MRES_Ignored;
+	}
 	
 	bCanRegen = true;
-	EnableRegen();
+	for(int i; i < 6; i++)
+		StoreToAddress(pRegenThink + view_as<Address>(i), 0x90, NumberType_Int8);
 	
 	return MRES_Ignored;
 }
@@ -75,18 +80,10 @@ public MRESReturn Pre_RegenThink(int player)
 public MRESReturn Post_RegenThink(int player) 
 {
 	if(bCanRegen){
-		DisableRegen();
+		for(int i; i < 6; i++) {
+			StoreToAddress(pRegenThink + view_as<Address>(i), nOldBytes[i], NumberType_Int8);
+		}
 		bCanRegen = false;
 	}
 	return MRES_Ignored;
-}
-
-static void EnableRegen() {
-	for (int x; x < 6; x++)
-		StoreToAddress(g_aRegenThink + view_as<Address>(x), 0x90, NumberType_Int8);
-}
-
-static void DisableRegen() {
-	for (int x; x < 6; x++)
-		StoreToAddress(g_aRegenThink + view_as<Address>(x), OLD_Address[x], NumberType_Int8);
 }

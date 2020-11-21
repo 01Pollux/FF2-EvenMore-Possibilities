@@ -3,11 +3,47 @@
 #endif
 #define FAN_FORCE_SCATTER
 
-static Address g_ScatterSelfForce = Address_Null;
-static Address g_UnlimitedSelfForce = Address_Null;
-static int OLD_Address[6];
+enum struct _SPConVars {
+	ConVar unlimited_pushes;
+	ConVar weapon_indexes;
+}
+static _SPConVars sp_cvars;
 
-static ConVar cv_UnlimitedPushes;
+methodmap WeaponPoolList < ArrayList {
+	public WeaponPoolList()
+	{
+		return view_as<WeaponPoolList>(new ArrayList());
+	}
+	
+	public bool WeaponExists(const int index)
+	{
+		return this.FindValue(index) != -1;
+	}
+	
+	public void RemoveWeapon(const int index)
+	{
+		int pos = this.FindValue(index);
+		if(pos != -1)
+			this.Erase(pos);
+	}
+	
+	public void AddWeapon(const int index)
+	{
+		int pos = this.FindValue(index);
+		if(pos == -1)
+			this.Push(index);
+	}
+	
+	public void EraseAll()
+	{
+		this.Clear();
+	}
+}
+static WeaponPoolList weapon_list;
+
+static int nOldBytes[6];
+static Address pScatterSelfForce;
+static Address pUnlimitedFAN;
 
 public bool FaN_PrepareConfig(GameData Config)
 {
@@ -19,33 +55,49 @@ public bool FaN_PrepareConfig(GameData Config)
 	else if(!DHookEnableDetour(OnFireBullet, true, Post_ScatterFireBullet))
 		return false;
 	
-	if((g_ScatterSelfForce = Config.GetAddress("CTFScattergun::FireBullet::AnyScatterFaN")) == Address_Null)
+	if((pScatterSelfForce = Config.GetAddress("CTFScattergun::FireBullet [allow all scatterguns]")) == Address_Null)
 		return false;
-	if((g_UnlimitedSelfForce = Config.GetAddress("CTFScattergun::FireBullet::NoPushPenalty")) == Address_Null)
+	for(int i; i < 6; i++)
+		nOldBytes[i] = LoadFromAddress(pScatterSelfForce + view_as<Address>(i), NumberType_Int8);
+	
+	if((pUnlimitedFAN = Config.GetAddress("CTFScattergun::FireBullet [set push]")) == Address_Null)
 		return false;
 	
-	for (int x; x < 6; x++)
-		OLD_Address[x] = LoadFromAddress(g_ScatterSelfForce + view_as<Address>(x), NumberType_Int8);
+	weapon_list = new WeaponPoolList();
 	
-	cv_UnlimitedPushes = CreateConVar("up_max_fanpush", "0", "Unlimited Pushes for FaN");
+	sp_cvars.unlimited_pushes = CreateConVar("up_max_fanpush", "0", "Unlimited Pushes for FaN");
+	(sp_cvars.weapon_indexes = CreateConVar("up_weapons", "1103;220", "Allow these to apply FaN push effect")).AddChangeHook(OnWeaponIdxChange);
 	
 	return true;
 }
 
+public void OnWeaponIdxChange(ConVar cvar, const char[] oldVal, const char[] newVal)
+{
+	weapon_list.EraseAll();
+	char[][] list = new char[6][PLATFORM_MAX_PATH];
+	int count = ExplodeString(oldVal, ";", list, 6, PLATFORM_MAX_PATH);
+	
+	while(count > 0)
+	{
+		count--;
+		weapon_list.AddWeapon(StringToInt(list[count]));
+	}
+}
+
 public MRESReturn Pre_ScatterFireBullet(int weapon, Handle Params)
 {
-	int client = DHookGetParam(Params, 1);
-	if(FF2_GetBossIndex(client) > -1)
-		return MRES_Ignored;
-	
 	if(!RoundIsActive())
 		return MRES_Ignored;
 	
-	if(cv_UnlimitedPushes.BoolValue)
+	FF2Player player = FF2Player(DHookGetParam(Params, 1));
+	if(player.bIsBoss)
+		return MRES_Ignored;
+		
+	if(sp_cvars.unlimited_pushes.BoolValue)
 		UnLimitedFan();
 	
 	int index = GetItemDefinitionIndex(weapon);
-	if(index != 1103 && index != 220)	//back scratcher && shortstop
+	if(!weapon_list.WeaponExists(index))
 		return MRES_Ignored;
 		
 	EnableScatterFaN();
@@ -59,26 +111,24 @@ public MRESReturn Post_ScatterFireBullet(int weapon, Handle Player)
 }
 
 
-stock void EnableScatterFaN()
+static void EnableScatterFaN()
 {
-	for (int x; x < 6; x++)
-	{
-		StoreToAddress(g_ScatterSelfForce + view_as<Address>(x), 0x90, NumberType_Int8);
-	}
+	for(int i; i < 6; i++)
+		StoreToAddress(pScatterSelfForce + view_as<Address>(i), 0x90, NumberType_Int8);
 }
 
-stock void UnLimitedFan()
+static void UnLimitedFan()
 {
-	StoreToAddress(g_UnlimitedSelfForce + view_as<Address>(0x06), 0x00, NumberType_Int8);
+	StoreToAddress(pUnlimitedFAN, 0x00, NumberType_Int8);
 }
 
-stock void DisableScatterFaN()
+static void DisableScatterFaN()
 {
-	for (int x; x < 6; x++)
-		StoreToAddress(g_ScatterSelfForce + view_as<Address>(x), OLD_Address[x], NumberType_Int8);
+	for(int i; i < 6; i++)
+		StoreToAddress(pScatterSelfForce + view_as<Address>(i), nOldBytes[i], NumberType_Int8);
 }
 
-stock void LimitedFan()
+static void LimitedFan()
 {
-	StoreToAddress(g_UnlimitedSelfForce + view_as<Address>(0x06), 0x01, NumberType_Int8);
+	StoreToAddress(pUnlimitedFAN, 0x01, NumberType_Int8);
 }
